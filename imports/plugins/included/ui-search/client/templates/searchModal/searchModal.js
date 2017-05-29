@@ -3,7 +3,6 @@ import { Template } from "meteor/templating";
 import { ProductSearch, Tags, OrderSearch, AccountSearch } from "/lib/collections";
 import { IconButton } from "/imports/plugins/core/ui/client/components";
 import { Session } from "meteor/session";
-
 /*
  * searchModal extra functions
  */
