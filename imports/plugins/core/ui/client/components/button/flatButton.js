@@ -1,12 +1,13 @@
 /* eslint no-unused-vars: 1 */
-//
-// TODO review PropTypes import in flatButton.js
-//
-import React, { Component, PropTypes } from "react";
+
+import React, { Component } from "react";
 import classnames from "classnames";
 import Button from "./button.jsx";
 
 class FlatButton extends Component {
+  static defaultProps = {
+    bezelStyle: "flat"
+  }
   render() {
     const {
       icon,
@@ -14,23 +15,22 @@ class FlatButton extends Component {
       ...otherProps
     } = this.props;
 
-    let buttonClassName = classnames({
-      "rui": true,
-      "button": true,
-      "flat": true
+    const buttonClassName = classnames({
+      rui: true,
+      button: true
     });
 
-
-    let iconClassName = classnames({
-      "fa-lg": false,
-      [icon]: true
-    });
-
+    let iconClassName;
     let onIconClassName;
+
+    if (icon) {
+      iconClassName = classnames({
+        [icon]: true
+      });
+    }
 
     if (onIcon) {
       onIconClassName = classnames({
-        "fa-lg": true,
         [onIcon]: true
       });
     }

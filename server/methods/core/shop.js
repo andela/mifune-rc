@@ -48,7 +48,7 @@ Meteor.methods({
     try {
       Collections.Shops.insert(shop);
     } catch (error) {
-      return Logger.error("Failed to shop/createShop", sanitizedError);
+      return Logger.error(error, "Failed to shop/createShop");
     }
     // we should have created new shop, or errored
     Logger.info("Created shop: ", shop._id);
@@ -437,7 +437,7 @@ Meteor.methods({
       return Collections.Tags.update(tagId, {
         $set: newTag
       }, function () {
-        Logger.info(
+        Logger.debug(
           `Changed name of tag ${tagId} to ${tagName}`);
         return true;
       });
@@ -449,7 +449,7 @@ Meteor.methods({
             relatedTagIds: existingTag._id
           }
         }, function () {
-          Logger.info(
+          Logger.debug(
             `Added tag ${existingTag.name} to the related tags list for tag ${currentTagId}`
           );
           return true;
@@ -461,7 +461,7 @@ Meteor.methods({
           isTopLevel: true
         }
       }, function () {
-        Logger.info(`Marked tag ${existingTag.name} as a top level tag`);
+        Logger.debug(`Marked tag ${existingTag.name} as a top level tag`);
         return true;
       });
     }
@@ -479,7 +479,7 @@ Meteor.methods({
           relatedTagIds: newTagId
         }
       }, function () {
-        Logger.info(`Added tag${newTag.name} to the related tags list for tag ${currentTagId}`);
+        Logger.debug(`Added tag${newTag.name} to the related tags list for tag ${currentTagId}`);
         return true;
       });
       // TODO: refactor this. unnecessary check
@@ -577,24 +577,118 @@ Meteor.methods({
   /**
    * shop/updateLanguageConfiguration
    * @summary enable / disable a language
-   * @param {String} language - language name
+   * @param {String} language - language name | "all" to bulk enable / disable
    * @param {Boolean} enabled - true / false
    * @return {Array} returns workflow array
    */
   "shop/updateLanguageConfiguration": function (language, enabled) {
     check(language, String);
     check(enabled, Boolean);
+
     // must have core permissions
     if (!Reaction.hasPermission("core")) {
       throw new Meteor.Error(403, "Access Denied");
     }
     this.unblock();
+
+    const shop = Collections.Shops.findOne({
+      _id: Reaction.getShopId()
+    });
+
+    const defaultLanguage = shop.language;
+
+    if (language === "all") {
+      const updateObject = {};
+
+      if (Array.isArray(shop.languages)) {
+        shop.languages.forEach((languageData, index) => {
+          if (languageData.i18n === defaultLanguage) {
+            updateObject[`languages.${index}.enabled`] = true;
+          } else {
+            updateObject[`languages.${index}.enabled`] = enabled;
+          }
+        });
+      }
+      return Collections.Shops.update({
+        _id: Reaction.getShopId()
+      }, {
+        $set: updateObject
+      });
+    } else if (language === defaultLanguage) {
+      return Collections.Shops.update({
+        "_id": Reaction.getShopId(),
+        "languages.i18n": language
+      }, {
+        $set: {
+          "languages.$.enabled": true
+        }
+      });
+    }
+
     return Collections.Shops.update({
       "_id": Reaction.getShopId(),
       "languages.i18n": language
     }, {
       $set: {
         "languages.$.enabled": enabled
+      }
+    });
+  },
+
+  /**
+   * shop/updateCurrencyConfiguration
+   * @summary enable / disable a currency
+   * @param {String} currency - currency name | "all" to bulk enable / disable
+   * @param {Boolean} enabled - true / false
+   * @return {Number} returns mongo update result
+   */
+  "shop/updateCurrencyConfiguration": function (currency, enabled) {
+    check(currency, String);
+    check(enabled, Boolean);
+    // must have core permissions
+    if (!Reaction.hasPermission("core")) {
+      throw new Meteor.Error(403, "Access Denied");
+    }
+    this.unblock();
+
+    const shop = Collections.Shops.findOne({
+      _id: Reaction.getShopId()
+    });
+
+    const defaultCurrency = shop.currency;
+
+    if (currency === "all") {
+      const updateObject = {};
+      for (const currencyName in shop.currencies) {
+        if ({}.hasOwnProperty.call(shop.currencies, currencyName) && currencyName !== "updatedAt") {
+          if (currencyName === defaultCurrency) {
+            updateObject[`currencies.${currencyName}.enabled`] = true;
+          } else {
+            updateObject[`currencies.${currencyName}.enabled`] = enabled;
+          }
+        }
+      }
+
+      return Collections.Shops.update({
+        _id: Reaction.getShopId()
+      }, {
+        $set: updateObject
+      });
+    } else if (currency === defaultCurrency) {
+      return Collections.Shops.update({
+        _id: Reaction.getShopId()
+      }, {
+        $set: {
+          [`currencies.${currency}.enabled`]: true
+        }
+      });
+    }
+
+    return Collections.Shops.update({
+      _id: Reaction.getShopId()
+    }, {
+      $set: {
+        [`currencies.${currency}.enabled`]: enabled
       }
     });
   },
@@ -684,7 +778,7 @@ Meteor.methods({
       shop.layout[i].layout = newLayout;
     }
     return Collections.Shops.update(shopId, {
-      $set: {layout: shop.layout}
+      $set: { layout: shop.layout }
     });
   }
 });

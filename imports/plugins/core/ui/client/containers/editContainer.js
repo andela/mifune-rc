@@ -1,7 +1,14 @@
 import React, { Children, Component, PropTypes } from "react";
 import { Reaction } from "/client/api";
 import { EditButton, VisibilityButton, Translation } from "/imports/plugins/core/ui/client/components";
-import { composeWithTracker } from "react-komposer";
+import { composeWithTracker } from "/lib/api/compose";
+
+const styles = {
+  editContainerItem: {
+    display: "flex",
+    marginLeft: 5
+  }
+};
 
 class EditContainer extends Component {
 
@@ -20,8 +27,15 @@ class EditContainer extends Component {
       label: props.label,
       i18nKeyLabel: props.i18nKeyLabel,
       template: props.editView,
-      data: props.data
+      data: {
+        data: props.data,
+        viewProps: {
+          field: props.field
+        }
+      }
     });
+
+    Reaction.state.set("edit/focus", props.field);
 
     return true;
   }
@@ -43,10 +57,12 @@ class EditContainer extends Component {
   renderVisibilityButton() {
     if (this.props.showsVisibilityButton) {
       return (
-        <VisibilityButton
-          onClick={this.handleVisibilityButtonClick}
-          toggleOn={this.props.data.isVisible}
-        />
+        <span className="edit-container-item" style={styles.editContainerItem}>
+          <VisibilityButton
+            onClick={this.handleVisibilityButtonClick}
+            toggleOn={this.props.data.isVisible}
+          />
+        </span>
       );
     }
 
@@ -101,11 +117,13 @@ class EditContainer extends Component {
     }
 
     return (
-      <EditButton
-        onClick={this.handleEditButtonClick}
-        status={status}
-        tooltip={tooltip}
-      />
+      <span className="edit-container-item" style={styles.editContainerItem}>
+        <EditButton
+          onClick={this.handleEditButtonClick}
+          status={status}
+          tooltip={tooltip}
+        />
+      </span>
     );
   }
 
@@ -157,12 +175,12 @@ EditContainer.propTypes = {
 
 function composer(props, onData) {
   let hasPermission;
-  const viewAs = Reaction.Router.getQueryParam("as");
+  const viewAs = Reaction.getUserPreferences("reaction-dashboard", "viewAs", "administrator");
 
   if (props.disabled === true || viewAs === "customer") {
     hasPermission = false;
   } else {
-    hasPermission = Reaction.hasPermission(props.premissions);
+    hasPermission = Reaction.hasPermission(props.permissions);
   }
 
   onData(null, {

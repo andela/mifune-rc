@@ -1,10 +1,7 @@
 import _ from "lodash";
-import React from "react";
-import { DataType } from "react-taco-table";
 import { Template } from "meteor/templating";
-import { i18next } from "/client/api";
 import { ProductSearch, Tags, OrderSearch, AccountSearch } from "/lib/collections";
-import { IconButton, SortableTable } from "/imports/plugins/core/ui/client/components";
+import { IconButton } from "/imports/plugins/core/ui/client/components";
 
 /*
  * searchModal extra functions
@@ -126,7 +123,6 @@ Template.searchModal.helpers({
     return {
       component: IconButton,
       icon: "fa fa-times",
-      kind: "close",
       onClick() {
         $(".js-search-modal").fadeOut(400, () => {
           $("body").css("overflow", "visible");

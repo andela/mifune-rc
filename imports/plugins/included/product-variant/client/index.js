@@ -10,8 +10,6 @@ import "./templates/products/productDetail/attributes.html";
 import "./templates/products/productDetail/attributes.js";
 import "./templates/products/productDetail/edit.html";
 import "./templates/products/productDetail/edit.js";
-import "./templates/products/productDetail/productDetail.html";
-import "./templates/products/productDetail/productDetail.js";
 import "./templates/products/productDetail/productImageGallery.html";
 import "./templates/products/productDetail/productImageGallery.js";
 import "./templates/products/productDetail/social.html";
@@ -27,6 +25,8 @@ import "./templates/products/productGrid/notice.html";
 import "./templates/products/productGrid/notice.js";
 import "./templates/products/productGrid/productGrid.html";
 import "./templates/products/productGrid/productGrid.js";
+import "./templates/products/productGrid/publishControls.html";
+import "./templates/products/productGrid/publishControls.js";
 
 import "./templates/products/productList/productList.html";
 import "./templates/products/productList/productList.js";

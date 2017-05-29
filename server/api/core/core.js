@@ -1,4 +1,5 @@
 import url from "url";
+import packageJson from "/package.json";
 import { merge, uniqWith } from "lodash";
 import { Meteor } from "meteor/meteor";
 import { EJSON } from "meteor/ejson";
@@ -6,14 +7,23 @@ import { Jobs, Packages, Shops } from "/lib/collections";
 import { Hooks, Logger } from "/server/api";
 import ProcessJobs from "/server/jobs";
 import { getRegistryDomain } from "./setDomain";
+import { registerTemplate } from "./templates";
 import { sendVerificationEmail } from "./accounts";
 import { getMailUrl } from "./email/config";
+
 
 export default {
 
   init() {
+    // make sure the default shop has been created before going further
+    while (!this.getShopId()) {
+      Logger.warn("No shopId, waiting one second...");
+      Meteor._sleepForMs(1000);
+    }
+
     // run onCoreInit hooks
-    Hooks.Events.run("onCoreInit", this);
+    Hooks.Events.run("onCoreInit");
+
     // start job server
     Jobs.startJobServer(() => {
       Logger.info("JobServer started");
@@ -27,13 +37,15 @@ export default {
     this.loadPackages();
     // process imports from packages and any hooked imports
     this.Import.flush();
-    // timing is important, packages are rqd
-    // for initilial permissions configuration.
-    this.createDefaultAdminUser();
+    // timing is important, packages are rqd for initial permissions configuration.
+    if (!Meteor.isAppTest) {
+      this.createDefaultAdminUser();
+    }
+    this.setAppVersion();
     // hook after init finished
     Hooks.Events.run("afterCoreInit");
 
-    Logger.info("Reaction.init() has run");
+    Logger.debug("Reaction.init() has run");
 
     return true;
   },
@@ -41,10 +53,16 @@ export default {
   Packages: {},
 
   registerPackage(packageInfo) {
-    const registeredPackage = this.Packages[packageInfo.name] =
-      packageInfo;
+    const registeredPackage = this.Packages[packageInfo.name] = packageInfo;
     return registeredPackage;
   },
+
+  /**
+   * registerTemplate
+   * registers Templates into the Tempaltes Collection
+   * @return {function} Registers template
+   */
+  registerTemplate: registerTemplate,
 
   /**
    * hasPermission - server
@@ -56,21 +74,18 @@ export default {
    * @return {Boolean} Boolean - true if has permission
    */
   hasPermission(checkPermissions, userId = Meteor.userId(), checkGroup = this.getShopId()) {
-    // check(checkPermissions, Match.OneOf(String, Array));
-    // check(userId, String);
-    // check(checkGroup, Match.Optional(String));
+    // check(checkPermissions, Match.OneOf(String, Array)); check(userId, String); check(checkGroup,
+    // Match.Optional(String));
 
     let permissions;
-    // default group to the shop or global if shop
-    // isn't defined for some reason.
+    // default group to the shop or global if shop isn't defined for some reason.
     if (checkGroup !== undefined && typeof checkGroup === "string") {
       group = checkGroup;
     } else {
       group = this.getShopId() || Roles.GLOBAL_GROUP;
     }
 
-    // permissions can be either a string or an array
-    // we'll force it into an array and use that
+    // permissions can be either a string or an array we'll force it into an array and use that
     if (checkPermissions === undefined) {
       permissions = ["owner"];
     } else if (typeof checkPermissions === "string") {
@@ -125,9 +140,7 @@ export default {
 
   configureMailUrl() {
     // maintained for legacy support
-    Logger.warn(
-      "Reaction.configureMailUrl() is deprecated. Please use Reaction.Email.getMailUrl() instead"
-    );
+    Logger.warn("Reaction.configureMailUrl() is deprecated. Please use Reaction.Email.getMailUrl() instead");
     return getMailUrl();
   },
 
@@ -135,9 +148,7 @@ export default {
     const domain = this.getDomain();
     const cursor = Shops.find({
       domains: domain
-    }, {
-      limit: 1
-    });
+    }, { limit: 1 });
     if (!cursor.count()) {
       Logger.debug(domain, "Add a domain entry to shops for ");
     }
@@ -146,8 +157,7 @@ export default {
 
   getCurrentShop() {
     const currentShopCursor = this.getCurrentShopCursor();
-    // also, we could check in such a way: `currentShopCursor instanceof Object`
-    // but not instanceof something.Cursor
+    // also, we could check in such a way: `currentShopCursor instanceof Object` but not instanceof something.Cursor
     if (typeof currentShopCursor === "object") {
       return currentShopCursor.fetch()[0];
     }
@@ -156,9 +166,13 @@ export default {
 
   getShopId() {
     const domain = this.getDomain();
-    const shop = Shops.find({ domains: domain }, {
+    const shop = Shops.find({
+      domains: domain
+    }, {
       limit: 1,
-      fields: { _id: 1 }
+      fields: {
+        _id: 1
+      }
     }).fetch()[0];
     return shop && shop._id;
   },
@@ -169,31 +183,63 @@ export default {
 
   getShopName() {
     const domain = this.getDomain();
-    const shop = Shops.find({ domains: domain }, {
+    const shop = Shops.find({
+      domains: domain
+    }, {
       limit: 1,
-      fields: { name: 1 }
+      fields: {
+        name: 1
+      }
     }).fetch()[0];
     return shop && shop.name;
   },
 
+  getShopPrefix() {
+    return "/" + this.getSlug(this.getShopName().toLowerCase());
+  },
+
   getShopEmail() {
-    const shop = Shops.find({ _id: this.getShopId() }, {
+    const shop = Shops.find({
+      _id: this.getShopId()
+    }, {
       limit: 1,
-      fields: { emails: 1 }
+      fields: {
+        emails: 1
+      }
     }).fetch()[0];
     return shop && shop.emails && shop.emails[0].address;
   },
 
-  getShopSettings() {
-    const settings = Packages.findOne({
-      name: "core",
-      shopId: this.getShopId()
-    }) || {};
+  getShopSettings(name = "core") {
+    const settings = Packages.findOne({ name: name, shopId: this.getShopId() }) || {};
     return settings.settings || {};
   },
 
+  getShopCurrency() {
+    const shop = Shops.findOne({
+      _id: this.getShopId()
+    });
+
+    return shop && shop.currency || "USD";
+  },
+
+  getShopLanguage() {
+    const { language } = Shops.findOne({
+      _id: this.getShopId()
+    }, {
+      fields: {
+        language: 1
+      } }
+    );
+    return language;
+  },
+
   getPackageSettings(name) {
-    return Packages.findOne({ name, shopId: this.getShopId() }) || null;
+    return Packages.findOne({ packageName: name, shopId: this.getShopId() }) || null;
+  },
+
+  getAppVersion() {
+    return Shops.findOne().appVersion;
   },
 
   /**
@@ -205,7 +251,6 @@ export default {
    * @returns {String} return userId
    */
   createDefaultAdminUser() {
-    Logger.info("Starting createDefaultAdminUser");
     const domain = getRegistryDomain();
     const env = process.env;
     const defaultAdminRoles = ["owner", "admin", "guest", "account/profile"];
@@ -213,35 +258,28 @@ export default {
     let configureEnv = false;
     let accountId;
 
-    while (!this.getShopId()) {
-      Logger.info("No shopId, waiting one second...");
-      Meteor._sleepForMs(1000);
-    }
     const shopId = this.getShopId();
 
     // if an admin user has already been created, we'll exit
-    if (Roles.getUsersInRole(defaultAdminRoles, shopId).count() !== 0) {
-      Logger.info("Not creating default admin user, already exists");
+    if (Roles.getUsersInRole("owner", shopId).count() !== 0) {
+      Logger.debug("Not creating default admin user, already exists");
       return ""; // this default admin has already been created for this shop.
     }
 
-    // run hooks on options object before creating user
-    // (the options object must be returned from all callbacks)
+    // run hooks on options object before creating user (the options object must be returned from all callbacks)
     options = Hooks.Events.run("beforeCreateDefaultAdminUser", options);
 
     //
-    // process Meteor settings and env variables for initial user config
-    // if ENV variables are set, these always override "settings.json"
-    // this is to allow for testing environments. where we don't want to use
-    // users configured in a settings file.
+    // process Meteor settings and env variables for initial user config if ENV variables are set, these always override
+    // "settings.json" this is to allow for testing environments. where we don't want to use users configured in a settings
+    // file.
     //
     if (env.REACTION_EMAIL && env.REACTION_USER && env.REACTION_AUTH) {
       configureEnv = true;
     }
 
     // defaults use either env or generated
-    options.email = env.REACTION_EMAIL || Random.id(8).toLowerCase() +
-      "@" + domain;
+    options.email = env.REACTION_EMAIL || Random.id(8).toLowerCase() + "@" + domain;
     options.username = env.REACTION_USER || "Admin"; // username
     options.password = env.REACTION_AUTH || Random.secret(8);
 
@@ -249,10 +287,8 @@ export default {
     if (Meteor.settings && !configureEnv) {
       if (Meteor.settings.reaction) {
         options.username = Meteor.settings.reaction.REACTION_USER || "Admin";
-        options.password = Meteor.settings.reaction.REACTION_AUTH || Random.secret(
-          8);
-        options.email = Meteor.settings.reaction.REACTION_EMAIL || Random.id(8)
-          .toLowerCase() + "@" + domain;
+        options.password = Meteor.settings.reaction.REACTION_AUTH || Random.secret(8);
+        options.email = Meteor.settings.reaction.REACTION_EMAIL || Random.id(8).toLowerCase() + "@" + domain;
         Logger.info("Using meteor --settings to create admin user");
       }
     }
@@ -273,15 +309,11 @@ export default {
     //
 
     // we're checking again to see if this user was created but not specifically for this shop.
-    if (Meteor.users.find({
-      "emails.address": options.email
-    }).count() === 0) {
+    if (Meteor.users.find({ "emails.address": options.email }).count() === 0) {
       accountId = Accounts.createUser(options);
     } else {
       // this should only occur when existing admin creates a new shop
-      accountId = Meteor.users.findOne({
-        "emails.address": options.email
-      })._id;
+      accountId = Meteor.users.findOne({ "emails.address": options.email })._id;
     }
 
     //
@@ -298,14 +330,9 @@ export default {
           "emails.$.verified": true
         }
       });
-    } else { // send verification email to admin
-      try {
-        // if server is not configured. Error in configuration
-        // are caught, but admin isn't verified.
-        sendVerificationEmail(accountId);
-      } catch (error) {
-        Logger.warn(error, "Unable to send admin account verification email.");
-      }
+    } else {
+      // send verification email to admin
+      sendVerificationEmail(accountId);
     }
 
     //
@@ -316,9 +343,8 @@ export default {
     Roles.setUserRoles(accountId, _.uniq(defaultAdminRoles), shopId);
     // // the reaction owner has permissions to all sites by default
     Roles.setUserRoles(accountId, _.uniq(defaultAdminRoles), Roles.GLOBAL_GROUP);
-    // initialize package permissions
-    // we don't need to do any further permission configuration
-    // it is taken care of in the assignOwnerRoles
+    // initialize package permissions we don't need to do any further permission configuration it is taken care of in the
+    // assignOwnerRoles
     const packages = Packages.find().fetch();
     for (const pkg of packages) {
       this.assignOwnerRoles(shopId, pkg.name, pkg.registry);
@@ -328,13 +354,11 @@ export default {
     //  notify user that admin was created account email should print on console
     //
 
-    Logger.warn(
-      `\n *********************************
+    Logger.warn(`\n *********************************
         \n  IMPORTANT! DEFAULT ADMIN INFO
         \n  EMAIL/LOGIN: ${options.email}
         \n  PASSWORD: ${options.password}
-        \n ********************************* \n\n`
-    );
+        \n ********************************* \n\n`);
 
     // run hooks on new user object
     const user = Meteor.users.findOne(accountId);
@@ -354,29 +378,40 @@ export default {
   loadPackages() {
     const packages = Packages.find().fetch();
 
-    let settingsFromJSON;
+    let registryFixtureData;
 
-    // Attempt to load reaction.json fixture data
-    try {
-      const settingsJSONAsset = Assets.getText("settings/reaction.json");
-      const validatedJson = EJSON.parse(settingsJSONAsset);
-
-      if (!_.isArray(validatedJson[0])) {
-        Logger.warn("Load Settings is not an array. Failed to load settings.");
-      } else {
-        settingsFromJSON = validatedJson;
+    if (process.env.REACTION_REGISTRY) {
+      // check the environment for the registry fixture data first
+      registryFixtureData = process.env.REACTION_REGISTRY;
+      Logger.info("Loaded REACTION_REGISTRY environment variable for registry fixture import");
+    } else {
+      // or attempt to load reaction.json fixture data
+      try {
+        registryFixtureData = Assets.getText("settings/reaction.json");
+        Logger.info("Loaded \"/private/settings/reaction.json\" for registry fixture import");
+      } catch (error) {
+        Logger.warn("Skipped loading settings from reaction.json.");
+        Logger.debug(error, "loadSettings reaction.json not loaded.");
       }
-    } catch (error) {
-      Logger.warn("Skipped loading settings from reaction.json.");
-      Logger.debug(error, "loadSettings reaction.json not loaded.");
     }
+
+    if (!!registryFixtureData) {
+      const validatedJson = EJSON.parse(registryFixtureData);
+
+      if (!Array.isArray(validatedJson[0])) {
+        Logger.warn("Registry fixture data is not an array. Failed to load.");
+      } else {
+        registryFixtureData = validatedJson;
+      }
+    }
+
     const layouts = [];
     // for each shop, we're loading packages in a unique registry
     _.each(this.Packages, (config, pkgName) => {
       return Shops.find().forEach((shop) => {
         const shopId = shop._id;
-
         if (!shopId) return [];
+
         // existing registry will be upserted with changes, perhaps we should add:
         this.assignOwnerRoles(shopId, pkgName, config.registry);
 
@@ -392,8 +427,8 @@ export default {
 
         // Setting from a fixture file, most likely reaction.json
         let settingsFromFixture;
-        if (settingsFromJSON) {
-          settingsFromFixture = _.find(settingsFromJSON[0], (packageSetting) => {
+        if (registryFixtureData) {
+          settingsFromFixture = _.find(registryFixtureData[0], (packageSetting) => {
             return config.name === packageSetting.name;
           });
         }
@@ -403,14 +438,9 @@ export default {
           return (config.name === ps.name && shopId === ps.shopId);
         });
 
-        const combinedSettings = merge({},
-          settingsFromPackage,
-          settingsFromFixture || {},
-          settingsFromDB || {}
-        );
+        const combinedSettings = merge({}, settingsFromPackage, settingsFromFixture || {}, settingsFromDB || {});
 
-        // populate array of layouts that
-        // don't already exist in Shops
+        // populate array of layouts that don't already exist in Shops
         if (combinedSettings.layout) {
           // filter out layout Templates
           for (const pkg of combinedSettings.layout) {
@@ -440,13 +470,15 @@ export default {
         // delete registry entries for packages that have been removed
         if (!_.has(this.Packages, pkg.name)) {
           Logger.debug(`Removing ${pkg.name}`);
-          return Packages.remove({
-            shopId: shop._id,
-            name: pkg.name
-          });
+          return Packages.remove({ shopId: shop._id, name: pkg.name });
         }
         return false;
       });
     });
+  },
+  setAppVersion() {
+    const version = packageJson.version;
+    Logger.info(`Reaction Version: ${version}`);
+    Shops.update({}, { $set: { appVersion: version } }, { multi: true });
   }
 };

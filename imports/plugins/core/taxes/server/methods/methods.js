@@ -27,6 +27,7 @@ export const methods = {
 
   /**
    * taxes/setRate
+   * update the cart without hooks
    * @param  {String} cartId cartId
    * @param  {Number} taxRate taxRate
    * @param  {Object} taxes taxes
@@ -37,7 +38,7 @@ export const methods = {
     check(taxRate, Number);
     check(taxes, Match.Optional(Array));
 
-    return Cart.update(cartId, {
+    return Cart.direct.update(cartId, {
       $set: {
         taxes: taxes,
         tax: taxRate
@@ -94,9 +95,9 @@ export const methods = {
     //
     // check if plugin is enabled and this calculation method is enabled
     if (pkg && pkg.enabled === true && pkg.settings.rates.enabled === true) {
-      Logger.info("Calculating custom tax rates");
+      Logger.debug("Calculating custom tax rates");
 
-      if (typeof cartToCalc.shipping !== "undefined") {
+      if (typeof cartToCalc.shipping !== "undefined" && typeof cartToCalc.items !== "undefined") {
         const shippingAddress = cartToCalc.shipping[0].address;
         //
         // custom rates that match shipping info
@@ -128,7 +129,7 @@ export const methods = {
               }, {
                 shopId: shopId
               }]
-            }, {sort: { postal: -1 } }
+            }, { sort: { postal: -1 } }
           ).fetch();
 
           // return custom rates

@@ -1,9 +1,19 @@
 import { FlatButton } from "/imports/plugins/core/ui/client/components";
+import { NotificationContainer } from "/imports/plugins/included/notifications/client/containers";
 import { Reaction } from "/client/api";
 import { Tags } from "/lib/collections";
+import CartPanel from "../../../../checkout/client/templates/cartPanel/container/cartPanelContainer";
+
 
 Template.CoreNavigationBar.onCreated(function () {
   this.state = new ReactiveDict();
+  const searchPackage = Reaction.Apps({ provides: "ui-search" });
+  if (searchPackage.length) {
+    this.state.set("searchEnabled", true);
+    this.state.set("searchTemplate", searchPackage[0].template);
+  } else {
+    this.state.set("searchEnabled", false);
+  }
 });
 
 /**
@@ -19,25 +29,43 @@ Template.CoreNavigationBar.events({
     return $(".dashboard-navbar-packages ul li").removeClass("active");
   },
   "click .search": function () {
-    Blaze.renderWithData(Template.searchModal, {
-    }, $("body").get(0));
+    const instance = Template.instance();
+    const searchTemplateName = instance.state.get("searchTemplate");
+    const searchTemplate = Template[searchTemplateName];
+    Blaze.renderWithData(searchTemplate, {
+    }, $("html").get(0));
     $("body").css("overflow", "hidden");
     $("#search-input").focus();
+  },
+  "click .notification-icon": function () {
+    $("body").css("overflow", "hidden");
+    $("#notify-dropdown").focus();
   }
 });
 
 Template.CoreNavigationBar.helpers({
+  isSearchEnabled() {
+    const instance = Template.instance();
+    return instance.state.get("searchEnabled");
+  },
+
+  searchTemplate() {
+    const instance = Template.instance();
+    if (instance.state.get("searchEnabled")) {
+      return instance.state.get("searchTemplate");
+    }
+  },
+
   IconButtonComponent() {
     return {
       component: FlatButton,
       icon: "fa fa-search",
       kind: "flat"
-      // onClick() {
-      //   Blaze.renderWithData(Template.searchModal, {
-      //   }, $("body").get(0));
-      //   $("body").css("overflow-y", "hidden");
-      //   $("#search-input").focus();
-      // }
+    };
+  },
+  notificationButtonComponent() {
+    return {
+      component: NotificationContainer
     };
   },
   onMenuButtonClick() {
@@ -51,9 +79,7 @@ Template.CoreNavigationBar.helpers({
 
   tagNavProps() {
     const instance = Template.instance();
-    let tags = [];
-
-    tags = Tags.find({
+    const tags = Tags.find({
       isTopLevel: true
     }, {
       sort: {
@@ -71,5 +97,8 @@ Template.CoreNavigationBar.helpers({
         instance.toggleMenuCallback = callback;
       }
     };
+  },
+  cartPanel() {
+    return CartPanel;
   }
 });

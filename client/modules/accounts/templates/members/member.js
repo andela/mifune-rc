@@ -1,3 +1,4 @@
+import _ from "lodash";
 import { Reaction } from "/client/api";
 import { Packages, Shops } from "/lib/collections";
 import { Meteor } from "meteor/meteor";
@@ -19,7 +20,9 @@ const getPermissionMap = (permissions) => {
  */
 Template.member.events({
   "click [data-event-action=showMemberSettings]": function () {
-    Reaction.showActionView({
+    $(".customerUsageType input").val(""); // form reset
+    $(".customerUsageType").addClass("hide"); // form reset
+    Reaction.setActionViewDetail({
       label: "Permissions",
       i18nKeyLabel: "admin.settings.permissionsSettingsLabel",
       data: this,
@@ -35,6 +38,9 @@ Template.memberSettings.helpers({
         return true;
       }
     }
+  },
+  userId: function () {
+    return Meteor.userId();
   },
   hasPermissionChecked: function (permission, userId) {
     if (userId && Roles.userIsInRole(userId, permission, this.shopId || Roles.userIsInRole(userId, permission,
@@ -52,7 +58,7 @@ Template.memberSettings.helpers({
       _id: shopId
     });
     if (shop && shop.name) {
-      return shop.name;
+      return shop.name || "Default Shop";
     }
   },
   permissionGroups: function (thisShopId) {
@@ -74,8 +80,11 @@ Template.memberSettings.helpers({
           // Get all permissions, add them to an array
           if (registryItem.permissions) {
             for (const permission of registryItem.permissions) {
-              permission.shopId = shopId;
-              permissions.push(permission);
+              // check needed because of non-object perms in the permissions array (e.g "admin", "owner")
+              if (typeof permission === "object") {
+                permission.shopId = shopId;
+                permissions.push(permission);
+              }
             }
           }
 
@@ -90,7 +99,7 @@ Template.memberSettings.helpers({
             });
           }
         }
-        // todo review this, hardcoded WIP
+        // TODO review this, hardcoded WIP
         const label = pkg.name.replace("reaction", "").replace(/(-.)/g, function (x) {
           return " " + x[1].toUpperCase();
         });
@@ -110,6 +119,18 @@ Template.memberSettings.helpers({
 
   hasManyPermissions: function (permissions) {
     return Boolean(permissions.length);
+  },
+  /**
+   * showAvalaraTaxSettings
+   * @return {Boolean} True if avalara is enabled. Defaults to false if not found
+   */
+  showAvalaraTaxSettings() {
+    const avalara = Packages.findOne({
+      name: "taxes-avalara",
+      shopId: Reaction.getShopId()
+    });
+
+    return _.get(avalara, "settings.avalara.enabled", false);
   }
 });
 
@@ -133,15 +154,15 @@ Template.memberSettings.events({
     } else {
       permissions.push(self.permission);
     }
-    if ($(event.currentTarget).is(":checked")) {
+    if (Template.instance().$(event.currentTarget).is(":checked")) {
       Meteor.call("accounts/addUserPermissions", member.userId, permissions, this.shopId);
     } else {
       Meteor.call("accounts/removeUserPermissions", member.userId, permissions, this.shopId);
     }
   },
   "click [data-event-action=resetMemberPermission]": function (event, template) {
-    const $icon = $(event.currentTarget);
-    if (confirm($icon.data("confirm"))) {
+    const $icon = Template.instance().$(event.currentTarget);
+    if (confirm($icon.data("confirm"))) { // eslint-disable-line no-alert
       const results = [];
       for (const role of template.data.roles) {
         results.push(Meteor.call("accounts/setUserPermissions", this.userId, ["guest", "account/profile"], role));

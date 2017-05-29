@@ -2,6 +2,7 @@ import _ from "lodash";
 import { Meteor } from "meteor/meteor";
 import { Tracker } from "meteor/tracker";
 import { Template } from "meteor/templating";
+import { i18next, Reaction } from "/client/api";
 import { Orders } from "/lib/collections";
 
 Template.coreOrderShippingTracking.onCreated(() => {
@@ -29,19 +30,45 @@ Template.coreOrderShippingTracking.onCreated(() => {
  *
  */
 Template.coreOrderShippingTracking.events({
+  "click [data-event-action=refresh-shipping]": function () {
+    const instance = Template.instance();
+    instance.$("#btn-processing").removeClass("hidden");
+    const orderId = Template.instance().order._id;
+    Meteor.call("shipping/status/refresh", orderId, (result) => {
+      if (result && result.error) {
+        instance.$("#btn-processing").addClass("hidden");
+        Alerts.toast(i18next.t("orderShipping.labelError", { err: result.error }), "error", { timeout: 7000 });
+      }
+    });
+  },
   "click [data-event-action=shipmentShipped]": function () {
     const template = Template.instance();
-    Meteor.call("orders/shipmentShipped", template.order, template.order.shipping[0]);
+    Meteor.call("orders/shipmentShipped", template.order, template.order.shipping[0], (err) => {
+      if (err) {
+        Alerts.toast(i18next.t("mail.alerts.cantSendEmail"), "error");
+      } else {
+        Alerts.toast(i18next.t("mail.alerts.emailSent"), "success");
+      }
+    });
+
+    // send notification to order owner
+    const userId = template.order.userId;
+    const type = "orderShipped";
+    const prefix = Reaction.getShopPrefix();
+    const url = `${prefix}/notifications`;
+    const sms = true;
+    Meteor.call("notification/send", userId, type, url, sms);
+
     // Meteor.call("workflow/pushOrderShipmentWorkflow", "coreOrderShipmentWorkflow", "orderShipped", this._id);
   },
 
   "click [data-event-action=resendNotification]": function () {
     const template = Template.instance();
-    Meteor.call("orders/sendNotification", template.order, (err) => {
+    Meteor.call("orders/sendNotification", template.order, "shipped", (err) => {
       if (err) {
-        Alerts.toast("Server Error: Can't send email notification.", "error");
+        Alerts.toast(i18next.t("mail.alerts.cantSendEmail"), "error");
       } else {
-        Alerts.toast("Email notification sent.", "success");
+        Alerts.toast(i18next.t("mail.alerts.emailSent"), "success");
       }
     });
   },
@@ -75,6 +102,14 @@ Template.coreOrderShippingTracking.events({
 });
 
 Template.coreOrderShippingTracking.helpers({
+  printableLabels() {
+    const { shippingLabelUrl, customsLabelUrl } = Template.instance().order.shipping[0];
+    if (shippingLabelUrl || customsLabelUrl) {
+      return { shippingLabelUrl, customsLabelUrl };
+    }
+
+    return false;
+  },
   isShipped() {
     const currentData = Template.currentData();
     const order = Template.instance().order;
@@ -86,10 +121,27 @@ Template.coreOrderShippingTracking.helpers({
         }
       });
 
-      return _.includes(fullItem.workflow.workflow, "coreOrderItemWorkflow/shipped");
+      return !_.includes(fullItem.workflow.workflow, "coreOrderItemWorkflow/shipped");
     });
 
     return shippedItems;
+  },
+
+  isNotCanceled() {
+    const currentData = Template.currentData();
+    const order = Template.instance().order;
+
+    const canceledItems = _.every(currentData.fulfillment.items, (shipmentItem) => {
+      const fullItem = _.find(order.items, (orderItem) => {
+        if (orderItem._id === shipmentItem._id) {
+          return true;
+        }
+      });
+
+      return fullItem.workflow.status !== "coreOrderItemWorkflow/canceled";
+    });
+
+    return canceledItems;
   },
 
   isCompleted() {
@@ -110,9 +162,23 @@ Template.coreOrderShippingTracking.helpers({
   },
 
   editTracking() {
-    const template = Template.instance();
-    if (!template.order.shipping[0].tracking || template.showTrackingEditForm.get()) {
-      return true;
+    // TODO move to a method where we loop package settings
+    // to determine if this feature is enabled.
+    // somewhere in here is where I wish this was converted to React!
+    const { settings } = Reaction.getPackageSettings("reaction-shipping-rates");
+    // TODO: future proof by not using flatRates, but rather look for editable:true
+    if (settings && settings.flatRates.enabled === true) {
+      const template = Template.instance();
+      const shipment = template.order.shipping[0];
+      const editing = template.showTrackingEditForm.get();
+      let view = false;
+      if (editing === true || !shipment.tracking && editing === false) {
+        view = true;
+      }
+      // TODO modularize tracking more, editable to settings
+      if (view && shipment.shipmentMethod.carrier === "Flat Rate") {
+        return true;
+      }
     }
     return false;
   },

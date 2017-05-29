@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from "react";
-import { composeWithTracker } from "react-komposer";
+import { composeWithTracker } from "/lib/api/compose";
 import { ReactionProduct } from "/lib/api";
-import { Reaction } from "/client/api";
+import { Reaction, i18next } from "/client/api";
 import { VariantList } from "../components";
 import { getChildVariants } from "../selectors/variants";
 import { Products, Media } from "/lib/collections";
@@ -81,16 +81,32 @@ class VariantListContainer extends Component {
     return (this.state && this.state.variants) || this.props.variants;
   }
 
+  get productHandle() {
+    const selectedProduct = ReactionProduct.selectedProduct();
+    return selectedProduct.__published && selectedProduct.__published.handle || selectedProduct.handle;
+  }
+
+  handleCreateVariant = () => {
+    const selectedProduct =  ReactionProduct.selectedProduct();
+
+    Meteor.call("products/createVariant", selectedProduct._id, (error) => {
+      if (error) {
+        Alerts.alert({
+          text: i18next.t("productDetailEdit.addVariantFail", { title: selectedProduct.title }),
+          confirmButtonText: i18next.t("app.close", { defaultValue: "Close" })
+        });
+      }
+    });
+  }
+
   handleVariantClick = (event, variant, ancestors = -1) => {
     if (Reaction.isActionViewOpen()) {
       this.handleEditVariant(event, variant, ancestors);
     } else {
-      const selectedProduct = ReactionProduct.selectedProduct();
-
       ReactionProduct.setCurrentVariant(variant._id);
       Session.set("variant-form-" + variant._id, true);
       Reaction.Router.go("product", {
-        handle: selectedProduct.handle,
+        handle: this.productHandle,
         variantId: variant._id
       }, {
         as: Reaction.Router.getQueryParam("as")
@@ -99,7 +115,6 @@ class VariantListContainer extends Component {
   }
 
   handleEditVariant = (event, variant, ancestors = -1) => {
-    const selectedProduct = ReactionProduct.selectedProduct();
     let editVariant = variant;
     if (ancestors >= 0) {
       editVariant = Products.findOne(variant.ancestors[ancestors]);
@@ -108,7 +123,7 @@ class VariantListContainer extends Component {
     ReactionProduct.setCurrentVariant(variant._id);
     Session.set("variant-form-" + editVariant._id, true);
     Reaction.Router.go("product", {
-      handle: selectedProduct.handle,
+      handle: this.productHandle,
       variantId: variant._id
     }, {
       as: Reaction.Router.getQueryParam("as")
@@ -162,6 +177,7 @@ class VariantListContainer extends Component {
           onMoveVariant={this.handleMoveVariant}
           onVariantClick={this.handleVariantClick}
           onVariantVisibiltyToggle={this.handleVariantVisibilityToggle}
+          onCreateVariant={this.handleCreateVariant}
           {...this.props}
           variants={this.variants}
         />
@@ -188,7 +204,7 @@ function composer(props, onData) {
 
   let editable;
 
-  if (Reaction.Router.getQueryParam("as") === "customer") {
+  if (Reaction.isPreview() === true) {
     editable = false;
   } else {
     editable = Reaction.hasPermission(["createProduct"]);
