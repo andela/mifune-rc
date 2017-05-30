@@ -1,5 +1,4 @@
 import React, { Component, PropTypes } from "react";
-import ReactDOM from "react-dom";
 import Helmet from "react-helmet";
 import classnames from "classnames";
 import { Translation } from "/imports/plugins/core/ui/client/components";
@@ -89,7 +88,9 @@ class FacebookSocialButton extends Component {
     });
 
     return (
-      <a className="btn btn-flat facebook-share" href="#" onClick={this.handleClick} target="_blank">
+      <a className="btn btn-flat facebook-share" aria-label="Share to Facebook" href="#" onClick={this.handleClick}
+        target="_blank"
+      >
         <Helmet
           meta={getOpenGraphMeta(this.props)}
         />

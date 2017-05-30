@@ -8,7 +8,8 @@ import { Tracker } from "meteor/tracker";
 import { Reaction } from "/client/api";
 import { Shops, Translations } from "/lib/collections";
 import * as Schemas from "/lib/collections/schemas";
-import i18next, { packageNamespaces, getLabelsFor, getMessagesFor, i18nextDep } from "./main";
+import i18next, { packageNamespaces, getLabelsFor, getMessagesFor, i18nextDep, currencyDep } from "./main";
+import { mergeDeep } from "/lib/api";
 
 //
 // setup options for i18nextBrowserLanguageDetector
@@ -32,7 +33,6 @@ const options = {
   htmlTag: document.documentElement
 };
 
-
 Meteor.startup(() => {
   // use tracker autorun to detect language changes
   // this only runs on initial page loaded
@@ -55,18 +55,16 @@ Meteor.startup(() => {
           }
         }).fetch();
 
-
-        // map reduce translations into i18next formatting
-        const resources = translations.reduce(function (x, y) {
-          const ns = Object.keys(y.translation)[0];
-          // first creating the structure, when add additional namespaces
-          if (x[y.i18n]) {
-            x[y.i18n][ns] = y.translation[ns];
-          } else {
-            x[y.i18n] = y.translation;
-          }
-          return x;
-        }, {});
+        //
+        // reduce and merge translations
+        // into i18next resource format
+        //
+        let resources = {};
+        translations.forEach(function (translation) {
+          const resource = {};
+          resource[translation.i18n] = translation.translation;
+          resources = mergeDeep(resources, resource);
+        });
 
         //
         // initialize i18next
@@ -75,19 +73,15 @@ Meteor.startup(() => {
           .use(i18nextBrowserLanguageDetector)
           .use(i18nextLocalStorageCache)
           .use(i18nextSprintfPostProcessor)
-          .use(i18nextJquery)
           .init({
             detection: options,
             debug: false,
             ns: packageNamespaces, // translation namespace for every package
             defaultNS: "core", // reaction "core" is the default namespace
+            fallbackNS: packageNamespaces,
             lng: language, // user session language
             fallbackLng: shop ? shop.language : null, // Shop language
             resources: resources
-            // saveMissing: true,
-            // missingKeyHandler: function (lng, ns, key, fallbackValue) {
-            //   Meteor.call("i18n/addTranslation", lng, ns, key, fallbackValue);
-            // }
           }, () => {
             // someday this should work
             // see: https://github.com/aldeed/meteor-simple-schema/issues/494
@@ -115,6 +109,22 @@ Meteor.startup(() => {
     }
   });
 
+  // use tracker autorun to detect currency changes
+  // this only runs on initial page loaded
+  // and when user.profile.currency updates
+  // althought it is also triggered when profile updates ( meaning .lang )
+  Tracker.autorun(function () {
+    const user = Meteor.user();
+    if (Reaction.Subscriptions.Shops.ready() && user) {
+      if (user.profile && user.profile.currency) {
+        const localStorageCurrency = localStorage.getItem("currency");
+        if (localStorageCurrency !== user.profile.currency) {
+          localStorage.setItem("currency", user.profile.currency);
+        }
+        currencyDep.changed();
+      }
+    }
+  });
   //
   // init i18nextJquery
   //

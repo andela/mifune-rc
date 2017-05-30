@@ -9,9 +9,9 @@ import { transformations } from "./transformations";
 
 
 const requiredFields = {};
-requiredFields.products = ["_id", "hashtags", "shopId", "handle", "price", "isVisible"];
+requiredFields.products = ["_id", "hashtags", "shopId", "handle", "price", "isVisible", "isSoldOut", "isLowQuantity", "isBackorder"];
 requiredFields.orders = ["_id", "shopId", "shippingName", "shippingPhone", "billingName", "userEmails",
-  "shippingAddress","billingAddress", "shippingStatus", "billingStatus", "orderTotal", "orderDate"];
+  "shippingAddress", "billingAddress", "shippingStatus", "billingStatus", "orderTotal", "orderDate"];
 requiredFields.accounts = ["_id", "shopId", "emails", "profile"];
 
 // https://docs.mongodb.com/manual/reference/text-search-languages/#text-search-languages
@@ -86,7 +86,7 @@ export function buildProductSearch(cb) {
   Logger.debug("Start (re)Building ProductSearch Collection");
   ProductSearch.remove({});
   const { fieldSet, weightObject, customFields } = getSearchParameters();
-  const products = Products.find({type: "simple"}).fetch();
+  const products = Products.find({ type: "simple" }).fetch();
   for (const product of products) {
     const productRecord = {};
     for (const field of fieldSet) {
@@ -109,6 +109,18 @@ export function buildProductSearch(cb) {
   if (cb) {
     cb();
   }
+}
+
+// we build this immediately on startup so that search will not throw an error
+export function buildEmptyProductSearch() {
+  const { weightObject, customFields } = getSearchParameters();
+  const indexObject = {};
+  for (const field of customFields) {
+    indexObject[field] = "text";
+  }
+  const rawProductSearchCollection = ProductSearch.rawCollection();
+  rawProductSearchCollection.dropIndexes("*");
+  rawProductSearchCollection.createIndex(indexObject, weightObject, getSearchLanguage());
 }
 
 export function rebuildProductSearchIndex(cb) {
@@ -194,7 +206,7 @@ export function buildOrderSearch(cb) {
   }
   const rawOrderSearchCollection = OrderSearch.rawCollection();
   rawOrderSearchCollection.dropIndexes("*");
-  rawOrderSearchCollection.createIndex({shopId: 1, shippingName: 1, billingName: 1, userEmails: 1});
+  rawOrderSearchCollection.createIndex({ shopId: 1, shippingName: 1, billingName: 1, userEmails: 1 });
   if (cb) {
     cb();
   }
@@ -206,18 +218,11 @@ export function buildAccountSearch(cb) {
   AccountSearch.remove({});
   const accounts = Accounts.find({}).fetch();
   for (const account of accounts) {
-    const accountSearch = {};
-    for (const field of requiredFields.accounts) {
-      if (transformations.accounts[field]) {
-        accountSearch[field] = transformations.accounts[field](account[field]);
-      } else {
-        accountSearch[field] = account[field];
-      }
-    }
+    buildAccountSearchRecord(account._id);
   }
   const rawAccountSearchCollection = AccountSearch.rawCollection();
   rawAccountSearchCollection.dropIndexes("*");
-  rawAccountSearchCollection.createIndex({shopId: 1, emails: 1});
+  rawAccountSearchCollection.createIndex({ shopId: 1, emails: 1 });
   if (cb) {
     cb();
   }
@@ -239,6 +244,6 @@ export function buildAccountSearchRecord(accountId) {
     }
     AccountSearch.insert(accountSearch);
     const rawAccountSearchCollection = AccountSearch.rawCollection();
-    rawAccountSearchCollection.createIndex({shopId: 1, emails: 1});
+    rawAccountSearchCollection.createIndex({ shopId: 1, emails: 1 });
   }
 }

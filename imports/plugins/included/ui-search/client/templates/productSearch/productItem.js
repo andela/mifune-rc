@@ -4,10 +4,10 @@ import { Session } from "meteor/session";
 import { Template } from "meteor/templating";
 import { Tracker } from "meteor/tracker";
 import { $ } from "meteor/jquery";
-import { Reaction } from "/client/api";
 import Logger from "/client/modules/logger";
 import { ReactionProduct } from "/lib/api";
-import { Media } from "/lib/collections";
+import { Media, Products } from "/lib/collections";
+import { Reaction } from "/client/api";
 
 /**
  * productGridItems helpers
@@ -85,7 +85,6 @@ Template.productItem.helpers({
 
     return weight === 3;
   },
-  // TODO is it used?
   shouldShowAdditionalImages: function () {
     if (this.isMediumWeight && this.mediaArray) {
       return true;
@@ -104,9 +103,21 @@ Template.productItem.helpers({
  */
 
 Template.productItem.events({
-  "click [data-event-action=productClick]": function (event, template) {
+  "click [data-event-action=productClick]": function (event) {
+    event.preventDefault();
     const instance = Template.instance();
     const view = instance.view;
+    const product = Products.findOne(event.currentTarget.dataset.eventValue);
+
+    let handle = product.handle;
+    if (product.__published) {
+      handle = product.__published.handle;
+    }
+
+    Reaction.Router.go("product", {
+      handle: handle
+    });
+
     $(".js-search-modal").delay(400).fadeOut(400, () => {
       $("body").css("overflow-y", "inherit");
       Blaze.remove(view);
@@ -126,7 +137,7 @@ Template.productItem.events({
   },
   "click .delete-product": function (event) {
     event.preventDefault();
-    ReactionProduct.maybeDeleteProduct(this);
+    ReactionProduct.archiveProduct(this);
   },
   "click .update-product-weight": function (event) {
     event.preventDefault();

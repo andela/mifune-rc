@@ -1,28 +1,38 @@
-require("money");
-require("autonumeric");
 import accounting from "accounting-js";
+import _ from "lodash";
 import { Meteor } from "meteor/meteor";
+import $ from "jquery";
 import { Template } from "meteor/templating";
 import { ReactiveVar } from "meteor/reactive-var";
-import { i18next, Logger, formatNumber } from "/client/api";
+import { i18next, Logger, formatNumber, Reaction } from "/client/api";
 import { NumericInput } from "/imports/plugins/core/ui/client/components";
-import { Media, Orders, Shops } from "/lib/collections";
-import _ from "lodash";
+import { Orders, Shops, Packages } from "/lib/collections";
+import { ButtonSelect } from "../../../../ui/client/components/button";
+import DiscountList from "/imports/plugins/core/discounts/client/components/list";
+import InvoiceContainer from "../../containers/invoiceContainer.js";
+import LineItemsContainer from "../../containers/lineItemsContainer.js";
+import TotalActionsContainer from "../../containers/totalActionsContainer.js";
+
+
+// helper to return the order payment object
+// the first credit paymentMethod on the order
+// returns entire payment method
+function orderCreditMethod(order) {
+  return order.billing.filter(value => value.paymentMethod.method ===  "credit")[0];
+}
 
 //
 // core order shipping invoice templates
 //
 Template.coreOrderShippingInvoice.onCreated(function () {
   this.state = new ReactiveDict();
-
-  // template.orderDep = new Tracker.Dependency;
   this.refunds = new ReactiveVar([]);
   this.refundAmount = new ReactiveVar(0.00);
-
-  // function getOrder(orderId) {
-  //   template.orderDep.depend();
-  //   return Orders.findOne(orderId);
-  // }
+  this.state.setDefault({
+    isCapturing: false,
+    isRefunding: false,
+    isFetching: true
+  });
 
   this.autorun(() => {
     const currentData = Template.currentData();
@@ -32,22 +42,149 @@ Template.coreOrderShippingInvoice.onCreated(function () {
     this.state.set("order", order);
     this.state.set("currency", shop.currencies[shop.currency]);
 
-    // template.order = getOrder(currentData.orderId);
     if (order) {
-      const paymentMethod = order.billing[0].paymentMethod;
-      Meteor.call("orders/refunds/list", paymentMethod, (error, result) => {
-        if (!error) {
-          this.refunds.set(result);
-        }
+      Meteor.call("orders/refunds/list", order, (error, result) => {
+        if (error) Logger.warn(error);
+        this.refunds.set(result);
+        this.state.set("isFetching", false);
       });
     }
   });
+});
+
+Template.coreOrderShippingInvoice.helpers({
+  isCapturing() {
+    const instance = Template.instance();
+    if (instance.state.get("isCapturing")) {
+      instance.$(":input").attr("disabled", true);
+      instance.$("#btn-capture-payment").text("Capturing");
+      return true;
+    }
+    return false;
+  },
+  isRefunding() {
+    const instance = Template.instance();
+    if (instance.state.get("isRefunding")) {
+      instance.$("#btn-refund-payment").text(i18next.t("order.refunding"));
+      return true;
+    }
+    return false;
+  },
+  isFetching() {
+    const instance = Template.instance();
+    if (instance.state.get("isFetching")) {
+      return true;
+    }
+    return false;
+  },
+  DiscountList() {
+    return DiscountList;
+  },
+  InvoiceContainer() {
+    return InvoiceContainer;
+  },
+  buttonSelectComponent() {
+    return {
+      component: ButtonSelect,
+      buttons: [
+        {
+          name: "Approve",
+          i18nKeyLabel: "order.approveInvoice",
+          active: true,
+          status: "info",
+          eventAction: "approveInvoice",
+          bgColor: "bg-info",
+          buttonType: "submit"
+        }, {
+          name: "Cancel",
+          i18nKeyLabel: "order.cancelInvoice",
+          active: false,
+          status: "danger",
+          eventAction: "cancelOrder",
+          bgColor: "bg-danger",
+          buttonType: "button"
+        }
+      ]
+    };
+  },
+  LineItemsContainer() {
+    return LineItemsContainer;
+  },
+  TotalActionsContainer() {
+    return TotalActionsContainer;
+  },
+  orderId() {
+    const instance = Template.instance();
+    const state = instance.state;
+    const order = state.get("order");
+    return order._id;
+  }
 });
 
 /**
  * coreOrderAdjustments events
  */
 Template.coreOrderShippingInvoice.events({
+  /**
+   * Click Start Cancel Order
+   * @param {Event} event - Event Object
+   * @param {Template} instance - Blaze Template
+   * @return {void}
+   */
+  "click [data-event-action=cancelOrder]": (event, instance) => {
+    event.preventDefault();
+    const order = instance.state.get("order");
+    const invoiceTotal = order.billing[0].invoice.total;
+    const currencySymbol = instance.state.get("currency").symbol;
+
+    Meteor.subscribe("Packages");
+    const packageId = order.billing[0].paymentMethod.paymentPackageId;
+    const settingsKey = order.billing[0].paymentMethod.paymentSettingsKey;
+    // check if payment provider supports de-authorize
+    const checkSupportedMethods = Packages.findOne({
+      _id: packageId,
+      shopId: Reaction.getShopId()
+    }).settings[settingsKey].support;
+
+    const orderStatus = order.billing[0].paymentMethod.status;
+    const orderMode = order.billing[0].paymentMethod.mode;
+
+    let alertText;
+    if (_.includes(checkSupportedMethods, "de-authorize") ||
+      (orderStatus === "completed" && orderMode === "capture")) {
+      alertText = i18next.t("order.applyRefundDuringCancelOrder", { currencySymbol, invoiceTotal });
+    }
+
+    Alerts.alert({
+      title: i18next.t("order.cancelOrder"),
+      text: alertText,
+      type: "warning",
+      showCancelButton: true,
+      showCloseButton: true,
+      confirmButtonColor: "#98afbc",
+      cancelButtonColor: "#98afbc",
+      confirmButtonText: i18next.t("order.cancelOrderNoRestock"),
+      cancelButtonText: i18next.t("order.cancelOrderThenRestock")
+    }, (isConfirm, cancel)=> {
+      let returnToStock;
+      if (isConfirm) {
+        returnToStock = false;
+        return Meteor.call("orders/cancelOrder", order, returnToStock, err => {
+          if (err) {
+            $(".alert").removeClass("hidden").text(err.message);
+          }
+        });
+      }
+      if (cancel === "cancel") {
+        returnToStock = true;
+        return Meteor.call("orders/cancelOrder", order, returnToStock, err => {
+          if (err) {
+            $(".alert").removeClass("hidden").text(err.message);
+          }
+        });
+      }
+    });
+  },
   /**
    * Submit form
    * @param  {Event} event - Event object
@@ -56,16 +193,19 @@ Template.coreOrderShippingInvoice.events({
    */
   "submit form[name=capture]": (event, instance) => {
     event.preventDefault();
-
     const state = instance.state;
     const order = state.get("order");
-    const orderTotal = accounting.toFixed(
-      order.billing[0].invoice.subtotal
-      + order.billing[0].invoice.shipping
-      + order.billing[0].invoice.taxes
-      , 2);
-    const discount = state.get("field-discount") || 0;
 
+    const paymentMethod = orderCreditMethod(order);
+    const orderTotal = accounting.toFixed(
+      paymentMethod.invoice.subtotal
+      + paymentMethod.invoice.shipping
+      + paymentMethod.invoice.taxes
+      , 2);
+
+    const discount = state.get("field-discount") || order.discount;
+    // TODO: review Discount cannot be greater than original total price
+    // logic is probably not valid any more. Discounts aren't valid below 0 order.
     if (discount > orderTotal) {
       Alerts.inline("Discount cannot be greater than original total price", "error", {
         placement: "coreOrderShippingInvoice",
@@ -79,7 +219,7 @@ Template.coreOrderShippingInvoice.events({
         confirmButtonText: i18next.t("order.applyDiscount")
       }, (isConfirm) => {
         if (isConfirm) {
-          Meteor.call("orders/approvePayment", order, discount, (error) => {
+          Meteor.call("orders/approvePayment", order, (error) => {
             if (error) {
               Logger.warn(error);
             }
@@ -87,7 +227,7 @@ Template.coreOrderShippingInvoice.events({
         }
       });
     } else {
-      Meteor.call("orders/approvePayment", order, discount, (error) => {
+      Meteor.call("orders/approvePayment", order, (error) => {
         if (error) {
           Logger.warn(error);
           if (error.error === "orders/approvePayment.discount-amount") {
@@ -108,23 +248,25 @@ Template.coreOrderShippingInvoice.events({
    * @param  {Template} instance - Blaze Template
    * @return {void}
    */
-  "submit form[name=refund]": (event, instance) => {
+  "click [data-event-action=applyRefund]": (event, instance) => {
     event.preventDefault();
 
     const { state } = Template.instance();
     const currencySymbol = state.get("currency").symbol;
     const order = instance.state.get("order");
-    const orderTotal = order.billing[0].paymentMethod.amount;
-    const paymentMethod = order.billing[0].paymentMethod;
-    const discounts = order.billing[0].invoice.discounts;
+    const paymentMethod = orderCreditMethod(order).paymentMethod;
+    const orderTotal = paymentMethod.amount;
+    const discounts = paymentMethod.discounts;
     const refund = state.get("field-refund") || 0;
     const refunds = Template.instance().refunds.get();
     let refundTotal = 0;
     _.each(refunds, function (item) {
       refundTotal += parseFloat(item.amount);
     });
+
     let adjustedTotal;
 
+    // TODO extract Stripe specific fullfilment payment handling out of core.
     // Stripe counts discounts as refunds, so we need to re-add the discount to not "double discount" in the adjustedTotal
     if (paymentMethod.processor === "Stripe") {
       adjustedTotal = accounting.toFixed(orderTotal + discounts - refundTotal, 2);
@@ -145,11 +287,17 @@ Template.coreOrderShippingInvoice.events({
         confirmButtonText: i18next.t("order.applyRefund")
       }, (isConfirm) => {
         if (isConfirm) {
-          Meteor.call("orders/refunds/create", order._id, paymentMethod, refund, (error) => {
+          state.set("isRefunding", true);
+          Meteor.call("orders/refunds/create", order._id, paymentMethod, refund, (error, result) => {
             if (error) {
               Alerts.alert(error.reason);
             }
+            if (result) {
+              Alerts.toast(i18next.t("mail.alerts.emailSent"), "success");
+            }
+            $("#btn-refund-payment").text(i18next.t("order.applyRefund"));
             state.set("field-refund", 0);
+            state.set("isRefunding", false);
           });
         }
       });
@@ -163,8 +311,20 @@ Template.coreOrderShippingInvoice.events({
 
   "click [data-event-action=capturePayment]": (event, instance) => {
     event.preventDefault();
+
+    instance.state.set("isCapturing", true);
+
     const order = instance.state.get("order");
     Meteor.call("orders/capturePayments", order._id);
+
+    if (order.workflow.status === "new") {
+      Meteor.call("workflow/pushOrderWorkflow", "coreOrderWorkflow", "processing", order);
+
+      Reaction.Router.setQueryParams({
+        filter: "processing",
+        _id: order._id
+      });
+    }
   },
 
   "change input[name=refund_amount], keyup input[name=refund_amount]": (event, instance) => {
@@ -184,7 +344,8 @@ Template.coreOrderShippingInvoice.helpers({
   numericInputProps(fieldName, value = 0, enabled = true) {
     const { state } = Template.instance();
     const order = state.get("order");
-    const status = order.billing[0].paymentMethod.status;
+    const paymentMethod = orderCreditMethod(order);
+    const status = paymentMethod.status;
     const isApprovedAmount = (status === "approved" || status === "completed");
 
     return {
@@ -195,7 +356,7 @@ Template.coreOrderShippingInvoice.helpers({
       isEditing: !isApprovedAmount, // Dont allow editing if its approved
       format: state.get("currency"),
       classNames: {
-        input: {amount: true},
+        input: { amount: true },
         text: {
           "text-success": status === "completed"
         }
@@ -209,7 +370,7 @@ Template.coreOrderShippingInvoice.helpers({
   refundInputProps() {
     const { state } = Template.instance();
     const order = state.get("order");
-    const paymentMethod = order.billing[0].paymentMethod;
+    const paymentMethod = orderCreditMethod(order).paymentMethod;
     const refunds = Template.instance().refunds.get();
 
     let refundTotal = 0;
@@ -221,11 +382,11 @@ Template.coreOrderShippingInvoice.helpers({
     return {
       component: NumericInput,
       numericType: "currency",
-      value: 0,
+      value: state.get("field-refund") || 0,
       maxValue: adjustedTotal,
       format: state.get("currency"),
       classNames: {
-        input: {amount: true}
+        input: { amount: true }
       },
       onChange(event, data) {
         state.set("field-refund", data.numberValue);
@@ -236,15 +397,15 @@ Template.coreOrderShippingInvoice.helpers({
   refundAmount() {
     return Template.instance().refundAmount;
   },
-  /**
-   * Discount
-   * @return {Number} current discount amount
-   */
+
   invoice() {
     const instance = Template.instance();
     const order = instance.state.get("order");
 
-    return order.billing[0].invoice;
+    const invoice = Object.assign({}, order.billing[0].invoice, {
+      totalItems: _.sumBy(order.items, (o) => o.quantity)
+    });
+    return invoice;
   },
 
   money(amount) {
@@ -254,7 +415,7 @@ Template.coreOrderShippingInvoice.helpers({
   disabled() {
     const instance = Template.instance();
     const order = instance.state.get("order");
-    const status = order.billing[0].paymentMethod.status;
+    const status = orderCreditMethod(order).paymentMethod.status;
 
     if (status === "approved" || status === "completed") {
       return "disabled";
@@ -266,7 +427,7 @@ Template.coreOrderShippingInvoice.helpers({
   paymentPendingApproval() {
     const instance = Template.instance();
     const order = instance.state.get("order");
-    const status = order.billing[0].paymentMethod.status;
+    const status = orderCreditMethod(order).paymentMethod.status;
 
     return status === "created" || status === "adjustments" || status === "error";
   },
@@ -274,12 +435,19 @@ Template.coreOrderShippingInvoice.helpers({
   canMakeAdjustments() {
     const instance = Template.instance();
     const order = instance.state.get("order");
-    const status = order.billing[0].paymentMethod.status;
+    const status = orderCreditMethod(order).paymentMethod.status;
 
     if (status === "approved" || status === "completed") {
       return false;
     }
     return true;
+  },
+
+  showAfterPaymentCaptured() {
+    const instance = Template.instance();
+    const order = instance.state.get("order");
+    const orderStatus = orderCreditMethod(order).paymentMethod.status;
+    return orderStatus === "completed";
   },
 
   paymentApproved() {
@@ -292,14 +460,15 @@ Template.coreOrderShippingInvoice.helpers({
   paymentCaptured() {
     const instance = Template.instance();
     const order = instance.state.get("order");
-
-    return order.billing[0].paymentMethod.status === "completed";
+    const orderStatus = orderCreditMethod(order).paymentMethod.status;
+    const orderMode = orderCreditMethod(order).paymentMethod.mode;
+    return orderStatus === "completed" || (orderStatus === "refunded" && orderMode === "capture");
   },
 
   refundTransactions() {
     const instance = Template.instance();
     const order = instance.state.get("order");
-    const transactions = order.billing[0].paymentMethod.transactions;
+    const transactions = orderCreditMethod(order).paymentMethod.transactions;
 
     return _.filter(transactions, (transaction) => {
       return transaction.type === "refund";
@@ -308,12 +477,11 @@ Template.coreOrderShippingInvoice.helpers({
 
   refunds() {
     const refunds = Template.instance().refunds.get();
-
     if (_.isArray(refunds)) {
       return refunds.reverse();
     }
 
-    return false;
+    return refunds;
   },
 
   /**
@@ -323,8 +491,8 @@ Template.coreOrderShippingInvoice.helpers({
   adjustedTotal() {
     const instance = Template.instance();
     const order = instance.state.get("order");
-    const paymentMethod = order.billing[0].paymentMethod;
-    const discounts = order.billing[0].invoice.discounts;
+    const paymentMethod = orderCreditMethod(order).paymentMethod;
+    const discounts = orderCreditMethod(order).invoice.discounts;
     const refunds = Template.instance().refunds.get();
     let refundTotal = 0;
 
@@ -338,9 +506,18 @@ Template.coreOrderShippingInvoice.helpers({
     return Math.abs(paymentMethod.amount - refundTotal);
   },
 
+  capturedDisabled() {
+    const isLoading = Template.instance().state.get("isCapturing");
+    if (isLoading) {
+      return "disabled";
+    }
+    return null;
+  },
+
   refundSubmitDisabled() {
     const amount = Template.instance().state.get("field-refund") || 0;
-    if (amount === 0) {
+    const isLoading = Template.instance().state.get("isRefunding");
+    if (amount === 0 || isLoading) {
       return "disabled";
     }
 
@@ -364,9 +541,29 @@ Template.coreOrderShippingInvoice.helpers({
     const instance = Template.instance();
     const order = instance.state.get("order");
 
-    const shipment = _.filter(order.shipping, {_id: currentData.fulfillment._id})[0];
+    const shipment = _.filter(order.shipping, { _id: currentData.fulfillment._id })[0];
 
     return shipment;
+  },
+
+  discounts() {
+    const enabledPaymentsArr = [];
+    const apps = Reaction.Apps({
+      provides: "paymentMethod",
+      enabled: true
+    });
+    for (app of apps) {
+      if (app.enabled === true) enabledPaymentsArr.push(app);
+    }
+    let discount = false;
+
+    for (enabled of enabledPaymentsArr) {
+      if (enabled.packageName === "discount-codes") {
+        discount = true;
+        break;
+      }
+    }
+    return discount;
   },
 
   items() {
@@ -375,37 +572,28 @@ Template.coreOrderShippingInvoice.helpers({
     const currentData = Template.currentData();
     const shipment = currentData.fulfillment;
 
-    const items = _.map(shipment.items, (item) => {
-      const originalItem = _.find(order.items, {
-        _id: item._id
+    // returns order items with shipping detail
+    const returnItems = _.map(order.items, (item) => {
+      const shipping = shipment.shipmentMethod;
+      return _.extend(item, { shipping });
+    });
+
+    let items;
+
+
+    // if avalara tax has been enabled it adds a "taxDetail" field for every item
+    if (order.taxes !== undefined) {
+      const taxes = order.taxes.slice(0, -1);
+
+      items = _.map(returnItems, (item) => {
+        const taxDetail = _.find(taxes, {
+          lineNumber: item._id
+        });
+        return _.extend(item, { taxDetail });
       });
-      return _.extend(originalItem, item);
-    });
-
+    } else {
+      items = returnItems;
+    }
     return items;
-  },
-
-  /**
-   * Media - find meda based on a variant
-   * @param  {String|Object} variantObjectOrId A variant of a product or a variant Id
-   * @return {Object|false}    An object contianing the media or false
-   */
-  media(variantObjectOrId) {
-    let variantId = variantObjectOrId;
-
-    if (typeof variant === "object") {
-      variantId = variantObjectOrId._id;
-    }
-
-    const defaultImage = Media.findOne({
-      "metadata.variantId": variantId,
-      "metadata.priority": 0
-    });
-
-    if (defaultImage) {
-      return defaultImage;
-    }
-
-    return false;
   }
 });

@@ -26,7 +26,7 @@
         {{> childVariantImageMedia media=featuredMedia}}
       </div>
       <div class="panel-title">
-        {{optionTitle}} - {{formatPrice price}}
+        {{optionTitle}} - {{formatPrice price true}}
         {{#if isDeleted}}
           <div class="panel-subheading">
             <span class="badge badge-danger" data-i18n="app.archived">
@@ -46,13 +46,13 @@
             {{> button
               icon="refresh"
               className="btn btn-default js-restore-child-variant"
-              tooltip="Restore from Trash"
+              tooltip="Restore from Archive"
             }}
           {{else}}
             {{> button
-              icon="trash"
+              icon="archive"
               className="btn btn-default js-remove-child-variant"
-              tooltip="Remove Variant"
+              tooltip="Archive Option"
             }}
           {{/if}}
         </div>
