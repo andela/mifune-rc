@@ -3,6 +3,10 @@ import { ReactionProduct } from "/lib/api";
 import { Media } from "/lib/collections";
 import { Icon } from "/imports/plugins/core/ui/client/components";
 
+function productHandle() {
+  const selectedProduct = ReactionProduct.selectedProduct();
+  return selectedProduct.__published && selectedProduct.__published.handle || selectedProduct.handle;
+}
 /**
  * childVariantForm onRendered
  */
@@ -12,6 +16,7 @@ Template.onRendered(function () {
 
     $(`div.child-variant-collapse:not(#child-variant-form-${selectedVariantId})`).collapse("hide");
     $(`#child-variant-form-${selectedVariantId}`).collapse("show");
+    $(`#option-child-variant-form-${selectedVariantId}`).focus();
   });
 });
 
@@ -89,11 +94,10 @@ Template.childVariantForm.helpers({
 
 Template.childVariantForm.events({
   "click .child-variant-form :input, click li": function (event, template) {
-    const selectedProduct = ReactionProduct.selectedProduct();
     const variantId = template.data._id;
 
     Reaction.Router.go("product", {
-      handle: selectedProduct.handle,
+      handle: productHandle(),
       variantId: variantId
     });
 
@@ -101,8 +105,8 @@ Template.childVariantForm.events({
   },
   "change .child-variant-input": function (event, template) {
     const variant = template.data;
-    const value = $(event.currentTarget).val();
-    const field = $(event.currentTarget).attr("name");
+    const value = Template.instance().$(event.currentTarget).val();
+    const field = Template.instance().$(event.currentTarget).attr("name");
 
     Meteor.call("products/updateProductField", variant._id, field, value,
       error => {
@@ -113,11 +117,10 @@ Template.childVariantForm.events({
     return ReactionProduct.setCurrentVariant(variant._id);
   },
   "click .js-child-variant-heading": function (event, instance) {
-    const selectedProduct = ReactionProduct.selectedProduct();
     const variantId = instance.data._id;
 
     Reaction.Router.go("product", {
-      handle: selectedProduct.handle,
+      handle: productHandle(),
       variantId: variantId
     });
   },
@@ -156,7 +159,14 @@ Template.childVariantForm.events({
     }, (isConfirm) => {
       if (isConfirm) {
         const id = instance.data._id;
-        Meteor.call("products/updateProductField", id, "isDeleted", false);
+        Meteor.call("products/updateProductField", id, "isDeleted", false, (error) => {
+          if (error) {
+            Alerts.alert({
+              text: i18next.t("productDetailEdit.restoreVariantFail", { title }),
+              confirmButtonText: i18next.t("app.close", { defaultValue: "Close" })
+            });
+          }
+        });
       }
     });
   }

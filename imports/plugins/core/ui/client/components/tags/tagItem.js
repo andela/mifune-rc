@@ -1,4 +1,4 @@
-import { Reaction } from "/client/api";
+import { Reaction, Router } from "/client/api";
 import { Tags } from "/lib/collections";
 import { i18next } from "/client/api";
 import classnames from "classnames";
@@ -19,7 +19,7 @@ function createAutosuggestInput(templateInstance, options) {
       templateInstance.state.set("suggestions", []);
     },
     inputProps: {
-      placeholder: i18next.t(options.i18nPlaceholderKey, { defaultValue: options.i18nPlaceholderValue}),
+      placeholder: i18next.t(options.i18nPlaceholderKey, { defaultValue: options.i18nPlaceholderValue }),
       value: templateInstance.state.get("inputValue"),
       onKeyDown(event) {
         // 9 == Tab key
@@ -200,5 +200,13 @@ Template.tagBlank.helpers({
       i18nPlaceholderValue: "Add Tag",
       onUpdateCallback: instance.submitInput
     });
+  }
+});
+
+Template.tagLink.events({
+  "click a"(event, templateInstance) {
+    event.preventDefault();
+    const slug = templateInstance.data.tag && templateInstance.data.tag.slug;
+    Router.go("tag", { slug });
   }
 });

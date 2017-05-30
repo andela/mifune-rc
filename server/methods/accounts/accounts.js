@@ -1,12 +1,151 @@
-import * as Collections from "/lib/collections";
+import _ from "lodash";
+import moment from "moment";
+import path from "path";
+import { Accounts as MeteorAccounts } from "meteor/accounts-base";
+import { Accounts, Cart, Media, Shops, Packages } from "/lib/collections";
 import * as Schemas from "/lib/collections/schemas";
 import { Logger, Reaction } from "/server/api";
 
 
 /**
+ * @summary Returns the name of the geocoder method to use
+ * @returns {string} Name of the Geocoder method to use
+ */
+function getValidator() {
+  const shopId = Reaction.getShopId();
+  const geoCoders = Packages.find({
+    "registry.provides": "addressValidation",
+    "settings.addressValidation.enabled": true,
+    "shopId": shopId,
+    "enabled": true
+  }).fetch();
+
+  if (!geoCoders.length) {
+    return "";
+  }
+  let geoCoder;
+  // Just one?, use that one
+  if (geoCoders.length === 1) {
+    geoCoder = geoCoders[0];
+  }
+  // If there are two, we default to the one that is not the Reaction one
+  if (geoCoders.length === 2) {
+    geoCoder = _.filter(geoCoders, function (coder) {
+      return !_.includes(coder.name, "reaction");
+    })[0];
+  }
+
+  // check if addressValidation is enabled but the package is disabled, don't do address validation
+  let registryName;
+  for (const registry of geoCoder.registry) {
+    if (registry.provides === "addressValidation") {
+      registryName = registry.name;
+    }
+  }
+  const packageKey = registryName.split("/")[2];  // "taxes/addressValidation/{packageKey}"
+  if (!_.get(geoCoder.settings[packageKey], "enabled")) {
+    return "";
+  }
+
+  const methodName = geoCoder.settings.addressValidation.addressValidationMethod;
+  return methodName;
+}
+
+/**
+ * @summary Compare individual fields of address and accumulate errors
+ * @param {Object} address - the address provided by the customer
+ * @param {Object} validationAddress - address provided by validator
+ * @returns {Array} Array of errors (or empty)
+ */
+function compareAddress(address, validationAddress) {
+  const errors = [];
+  // first check, if a field is missing (and was present in original address), that means it didn't validate
+  // TODO rewrite with just a loop over field names but KISS for now
+  if (address.address1 && !validationAddress.address1) {
+    errors.push({ address1: "Address line one did not validate" });
+  }
+
+  if (address.address2 && validationAddress.address2 && _.trim(_.upperCase(address.address2)) !== _.trim(_.upperCase(validationAddress.address2))) {
+    errors.push({ address2: "Address line 2 did not validate" });
+  }
+
+  if (!validationAddress.city) {
+    errors.push({ city: "City did not validate" });
+  }
+  if (address.postal && !validationAddress.postal) {
+    errors.push({ postal: "Postal did not validate" });
+  }
+
+  if (address.region && !validationAddress.region) {
+    errors.push({ region: "Region did not validate" });
+  }
+
+  if (address.country && !validationAddress.country) {
+    errors.push({ country: "Country did not validate" });
+  }
+  // second check if both fields exist, but they don't match (which almost always happen for certain fields on first time)
+  if (validationAddress.address1 && address.address1 && _.trim(_.upperCase(address.address1)) !== _.trim(_.upperCase(validationAddress.address1))) {
+    errors.push({ address1: "Address line 1 did not match" });
+  }
+
+  if (validationAddress.address2 && address.address2 && (_.upperCase(address.address2) !== _.upperCase(validationAddress.address2))) {
+    errors.push({ address2: "Address line 2" });
+  }
+
+  if (validationAddress.city && address.city && _.trim(_.upperCase(address.city)) !== _.trim(_.upperCase(validationAddress.city))) {
+    errors.push({ city: "City did not match" });
+  }
+
+  if (validationAddress.postal && address.postal && _.trim(_.upperCase(address.postal)) !== _.trim(_.upperCase(validationAddress.postal))) {
+    errors.push({ postal: "Postal Code did not match" });
+  }
+
+  if (validationAddress.region && address.region && _.trim(_.upperCase(address.region)) !== _.trim(_.upperCase(validationAddress.region))) {
+    errors.push({ region: "Region did not match" });
+  }
+
+  if (validationAddress.country && address.country && _.upperCase(address.country) !== _.upperCase(validationAddress.country)) {
+    errors.push({ country: "Country did not match" });
+  }
+  return errors;
+}
+
+/**
+ * @summary Validates an address, and if fails returns details of issues
+ * @param {Object} address - The address object to validate
+ * @returns {{validated: boolean, address: *}} - The results of the validation
+ */
+function validateAddress(address) {
+  check(address, Object);
+  let validated = true;
+  let validationErrors;
+  let validatedAddress = address;
+  let formErrors;
+  Schemas.Address.clean(address);
+  const validator = getValidator();
+  if (validator) {
+    const validationResult = Meteor.call(validator, address);
+    validatedAddress = validationResult.validatedAddress;
+    formErrors = validationResult.errors;
+    if (validatedAddress) {
+      validationErrors = compareAddress(address, validatedAddress);
+      if (validationErrors.length || formErrors.length) {
+        validated = false;
+      }
+    } else {
+      // No address, fail validation
+      validated = false;
+    }
+  }
+  const validationResults = { validated, fieldErrors: validationErrors, formErrors, validatedAddress };
+  return validationResults;
+}
+
+/**
  * Reaction Account Methods
  */
 Meteor.methods({
+  "accounts/validateAddress": validateAddress,
   /*
    * check if current user has password
    */
@@ -45,12 +184,10 @@ Meteor.methods({
     if (!address._id) {
       address._id = Random.id();
     }
-    // clean schema
-    Schemas.Address.clean(address);
     // if address got shippment or billing default, we need to update cart
     // addresses accordingly
     if (address.isShippingDefault || address.isBillingDefault) {
-      const cart = Collections.Cart.findOne({ userId: userId });
+      const cart = Cart.findOne({ userId: userId });
       // if cart exists
       // First amend the cart,
       if (typeof cart === "object") {
@@ -63,7 +200,7 @@ Meteor.methods({
       }
       // then change the address that has been affected
       if (address.isShippingDefault) {
-        Collections.Accounts.update({
+        Accounts.update({
           "userId": userId,
           "profile.addressBook.isShippingDefault": true
         }, {
@@ -73,7 +210,7 @@ Meteor.methods({
         });
       }
       if (address.isBillingDefault) {
-        Collections.Accounts.update({
+        Accounts.update({
           "userId": userId,
           "profile.addressBook.isBillingDefault": true
         }, {
@@ -84,7 +221,7 @@ Meteor.methods({
       }
     }
 
-    return Collections.Accounts.upsert({
+    return Accounts.upsert({
       userId: userId
     }, {
       $set: {
@@ -122,7 +259,7 @@ Meteor.methods({
     const userId = accountUserId || Meteor.userId();
     // we need to compare old state of isShippingDefault, isBillingDefault with
     // new state and if it was enabled/disabled reflect this changes in cart
-    const account = Collections.Accounts.findOne({
+    const account = Accounts.findOne({
       userId: userId
     });
     const oldAddress = account.profile.addressBook.find(function (addr) {
@@ -135,9 +272,13 @@ Meteor.methods({
       Object.assign(address, { [type]: true });
     }
 
-    if (oldAddress.isShippingDefault !== address.isShippingDefault ||
-      oldAddress.isBillingDefault !== address.isBillingDefault) {
-      const cart = Collections.Cart.findOne({ userId: userId });
+    // We want the cart addresses to be updated when current default address
+    // (shipping or Billing) are different than the previous one, but also
+    // when the current default address(ship or bill) gets edited(so Current and Previous default are the same).
+    // This check can be simplified to :
+    if  (address.isShippingDefault || address.isBillingDefault ||
+         oldAddress.isShippingDefault || address.isBillingDefault) {
+      const cart = Cart.findOne({ userId: userId });
       // Cart should exist to this moment, so we doesn't need to to verify its
       // existence.
       if (oldAddress.isShippingDefault !== address.isShippingDefault) {
@@ -146,7 +287,7 @@ Meteor.methods({
           // we need to add this address to cart
           Meteor.call("cart/setShipmentAddress", cart._id, address);
           // then, if another address was `ShippingDefault`, we need to unset it
-          Collections.Accounts.update({
+          Accounts.update({
             "userId": userId,
             "profile.addressBook.isShippingDefault": true
           }, {
@@ -159,13 +300,16 @@ Meteor.methods({
           // this address from `cart.shipping`
           Meteor.call("cart/unsetAddresses", address._id, userId, "shipping");
         }
+      } else if (address.isShippingDefault && oldAddress.isShippingDefault) {
+        // If current Shipping Address was edited but not changed update it to cart too
+        Meteor.call("cart/setShipmentAddress", cart._id, address);
       }
 
       // the same logic used for billing
       if (oldAddress.isBillingDefault !== address.isBillingDefault) {
         if (address.isBillingDefault) {
           Meteor.call("cart/setPaymentAddress", cart._id, address);
-          Collections.Accounts.update({
+          Accounts.update({
             "userId": userId,
             "profile.addressBook.isBillingDefault": true
           }, {
@@ -176,10 +320,13 @@ Meteor.methods({
         } else {
           Meteor.call("cart/unsetAddresses", address._id, userId, "billing");
         }
+      } else if (address.isBillingDefault && oldAddress.isBillingDefault) {
+        // If current Billing Address was edited but not changed update it to cart too
+        Meteor.call("cart/setPaymentAddress", cart._id, address);
       }
     }
 
-    return Collections.Accounts.update({
+    return Accounts.update({
       "userId": userId,
       "profile.addressBook._id": address._id
     }, {
@@ -214,7 +361,7 @@ Meteor.methods({
     // remove this address in cart, if used, before completely removing
     Meteor.call("cart/unsetAddresses", addressId, userId);
 
-    return Collections.Accounts.update({
+    return Accounts.update({
       "userId": userId,
       "profile.addressBook._id": addressId
     }, {
@@ -243,7 +390,7 @@ Meteor.methods({
 
     this.unblock();
 
-    const shop = Collections.Shops.findOne(shopId);
+    const shop = Shops.findOne(shopId);
 
     if (!shop) {
       const msg = `accounts/inviteShopMember - Shop ${shopId} not found`;
@@ -274,11 +421,8 @@ Meteor.methods({
       "emails.address": email
     });
 
-    const tmpl = "accounts/inviteShopMember";
-    SSR.compileTemplate("accounts/inviteShopMember", Reaction.Email.getTemplate(tmpl));
-
     if (!user) {
-      const userId = Accounts.createUser({
+      const userId = MeteorAccounts.createUser({
         email: email,
         username: name
       });
@@ -297,30 +441,74 @@ Meteor.methods({
         }
       });
 
+      // Get shop logo, if available. If not, use default logo from file-system
+      let emailLogo;
+      if (Array.isArray(shop.brandAssets)) {
+        const brandAsset = _.find(shop.brandAssets, (asset) => asset.type === "navbarBrandImage");
+        const mediaId = Media.findOne(brandAsset.mediaId);
+        emailLogo = path.join(Meteor.absoluteUrl(), mediaId.url());
+      } else {
+        emailLogo = Meteor.absoluteUrl() + "resources/email-templates/shop-logo.png";
+      }
+
+      const dataForEmail = {
+        // Shop Data
+        shop: shop,
+        contactEmail: shop.emails[0].address,
+        homepage: Meteor.absoluteUrl(),
+        emailLogo: emailLogo,
+        copyrightDate: moment().format("YYYY"),
+        legalName: shop.addressBook[0].company,
+        physicalAddress: {
+          address: shop.addressBook[0].address1 + " " + shop.addressBook[0].address2,
+          city: shop.addressBook[0].city,
+          region: shop.addressBook[0].region,
+          postal: shop.addressBook[0].postal
+        },
+        shopName: shop.name,
+        socialLinks: {
+          display: true,
+          facebook: {
+            display: true,
+            icon: Meteor.absoluteUrl() + "resources/email-templates/facebook-icon.png",
+            link: "https://www.facebook.com"
+          },
+          googlePlus: {
+            display: true,
+            icon: Meteor.absoluteUrl() + "resources/email-templates/google-plus-icon.png",
+            link: "https://plus.google.com"
+          },
+          twitter: {
+            display: true,
+            icon: Meteor.absoluteUrl() + "resources/email-templates/twitter-icon.png",
+            link: "https://www.twitter.com"
+          }
+        },
+        // Account Data
+        user: Meteor.user(),
+        currentUserName,
+        invitedUserName: name,
+        url: MeteorAccounts.urls.enrollAccount(token)
+      };
+
+      // Compile Email with SSR
+      const tpl = "accounts/inviteShopMember";
+      const subject = "accounts/inviteShopMember/subject";
+      SSR.compileTemplate(tpl, Reaction.Email.getTemplate(tpl));
+      SSR.compileTemplate(subject, Reaction.Email.getSubject(tpl));
+
       Reaction.Email.send({
         to: email,
         from: `${shop.name} <${shop.emails[0].address}>`,
-        subject: `You have been invited to join ${shop.name}`,
-        html: SSR.render("accounts/inviteShopMember", {
-          homepage: Meteor.absoluteUrl(),
-          shop,
-          currentUserName,
-          invitedUserName: name,
-          url: Accounts.urls.enrollAccount(token)
-        })
+        subject: SSR.render(subject, dataForEmail),
+        html: SSR.render(tpl, dataForEmail)
       });
     } else {
       Reaction.Email.send({
         to: email,
         from: `${shop.name} <${shop.emails[0].address}>`,
-        subject: `You have been invited to join ${shop.name}`,
-        html: SSR.render("accounts/inviteShopMember", {
-          homepage: Meteor.absoluteUrl(),
-          shop,
-          currentUserName,
-          invitedUserName: name,
-          url: Meteor.absoluteUrl()
-        })
+        subject: SSR.render(subject, dataForEmail),
+        html: SSR.render(tpl, dataForEmail)
       });
     }
     return true;
@@ -339,8 +527,55 @@ Meteor.methods({
 
     this.unblock();
 
-    const user = Collections.Accounts.findOne(userId);
-    const shop = Collections.Shops.findOne(shopId);
+    const user = Accounts.findOne(userId);
+    const shop = Shops.findOne(shopId);
+
+    // Get shop logo, if available. If not, use default logo from file-system
+    let emailLogo;
+    if (Array.isArray(shop.brandAssets)) {
+      const brandAsset = _.find(shop.brandAssets, (asset) => asset.type === "navbarBrandImage");
+      const mediaId = Media.findOne(brandAsset.mediaId);
+      emailLogo = path.join(Meteor.absoluteUrl(), mediaId.url());
+    } else {
+      emailLogo = Meteor.absoluteUrl() + "resources/email-templates/shop-logo.png";
+    }
+
+    const dataForEmail = {
+      // Shop Data
+      shop: shop,
+      contactEmail: shop.emails[0].address,
+      homepage: Meteor.absoluteUrl(),
+      emailLogo: emailLogo,
+      copyrightDate: moment().format("YYYY"),
+      legalName: shop.addressBook[0].company,
+      physicalAddress: {
+        address: shop.addressBook[0].address1 + " " + shop.addressBook[0].address2,
+        city: shop.addressBook[0].city,
+        region: shop.addressBook[0].region,
+        postal: shop.addressBook[0].postal
+      },
+      shopName: shop.name,
+      socialLinks: {
+        display: true,
+        facebook: {
+          display: true,
+          icon: Meteor.absoluteUrl() + "resources/email-templates/facebook-icon.png",
+          link: "https://www.facebook.com"
+        },
+        googlePlus: {
+          display: true,
+          icon: Meteor.absoluteUrl() + "resources/email-templates/google-plus-icon.png",
+          link: "https://plus.google.com"
+        },
+        twitter: {
+          display: true,
+          icon: Meteor.absoluteUrl() + "resources/email-templates/twitter-icon.png",
+          link: "https://www.twitter.com"
+        }
+      },
+      // Account Data
+      user: Meteor.user()
+    };
 
     // anonymous users arent welcome here
     if (!user.emails || !user.emails.length > 0) {
@@ -358,18 +593,16 @@ Meteor.methods({
       shopEmail = shop.emails[0].address;
     }
 
-    const tmpl = "accounts/sendWelcomeEmail";
-    SSR.compileTemplate("accounts/sendWelcomeEmail", Reaction.Email.getTemplate(tmpl));
+    const tpl = "accounts/sendWelcomeEmail";
+    const subject = "accounts/sendWelcomeEmail/subject";
+    SSR.compileTemplate(tpl, Reaction.Email.getTemplate(tpl));
+    SSR.compileTemplate(subject, Reaction.Email.getSubject(tpl));
 
     Reaction.Email.send({
       to: userEmail,
       from: `${shop.name} <${shopEmail}>`,
-      subject: `Welcome to ${shop.name}!`,
-      html: SSR.render("accounts/sendWelcomeEmail", {
-        homepage: Meteor.absoluteUrl(),
-        shop: shop,
-        user: Meteor.user()
-      })
+      subject: SSR.render(subject, dataForEmail),
+      html: SSR.render(tpl, dataForEmail)
     });
 
     return true;
