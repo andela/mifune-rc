@@ -6,6 +6,6 @@
     "REACTION_AUTH": "",
     "REACTION_EMAIL": ""
   },
-  "REACTION_LOG_LEVEL": "info",
+  "isDebug": "info",
   "public": {}
 }

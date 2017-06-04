@@ -1,10 +1,8 @@
 import React, { Component, PropTypes } from "react";
 import update from "react/lib/update";
-import { Reaction } from "/client/api";
-import { composeWithTracker } from "/lib/api/compose";
+import { composeWithTracker } from "react-komposer";
 import { ReactionProduct } from "/lib/api";
-import { Tags, Media, Templates } from "/lib/collections";
-import { Countries } from "/client/collections";
+import { Tags, Media } from "/lib/collections";
 import { ProductAdmin } from "../components";
 
 class ProductAdminContainer extends Component {
@@ -12,6 +10,7 @@ class ProductAdminContainer extends Component {
     super(props);
 
     this.state = {
+      product: props.product,
       newMetafield: {
         key: "",
         value: ""
@@ -19,26 +18,34 @@ class ProductAdminContainer extends Component {
     };
   }
 
-  handleCardExpand = (cardName) => {
-    Reaction.state.set("edit/focus", cardName);
+  componentWillReceiveProps(nextProps) {
+    this.setState({
+      product: nextProps.product
+    });
+  }
+
+  get product() {
+    return this.state.product || this.props.product || {};
   }
 
   handleDeleteProduct = (product) => {
-    ReactionProduct.archiveProduct(product || this.product);
+    ReactionProduct.maybeDeleteProduct(product || this.product);
+  }
+
+  handleFieldChange = (field, value) => {
+    const newState = update(this.state, {
+      product: {
+        $merge: {
+          [field]: value
+        }
+      }
+    });
+
+    this.setState(newState);
   }
 
   handleProductFieldSave = (productId, fieldName, value) => {
-    let updateValue = value;
-    // special case, slugify handles.
-    if (fieldName === "handle") {
-      updateValue = Reaction.getSlug(value);
-    }
-    Meteor.call("products/updateProductField", productId, fieldName, updateValue, (error) => {
-      if (error) {
-        Alerts.toast(error.message, "error");
-        this.forceUpdate();
-      }
-    });
+    Meteor.call("products/updateProductField", productId, fieldName, value);
   }
 
 
@@ -92,14 +99,16 @@ class ProductAdminContainer extends Component {
     return (
       <ProductAdmin
         newMetafield={this.state.newMetafield}
-        onCardExpand={this.handleCardExpand}
         onDeleteProduct={this.handleDeleteProduct}
+        onFieldChange={this.handleFieldChange}
         onMetaChange={this.handleMetaChange}
         onMetaRemove={this.handleMetaRemove}
         onMetaSave={this.handleMetafieldSave}
         onProductFieldSave={this.handleProductFieldSave}
         onRestoreProduct={this.handleProductRestore}
         {...this.props}
+        product={this.product}
+        tags={this.props.tags}
       />
     );
   }
@@ -132,33 +141,14 @@ function composer(props, onData) {
     }
 
     revisonDocumentIds = [product._id];
-
-    const templates = Templates.find({
-      parser: "react",
-      provides: "template",
-      templateFor: { $in: ["pdp"] },
-      enabled: true
-    }).map((template) => {
-      return {
-        label: template.title,
-        value: template.name
-      };
-    });
-
-    const countries = Countries.find({}).fetch();
-
-    onData(null, {
-      editFocus: Reaction.state.get("edit/focus"),
-      product: product,
-      media,
-      tags,
-      revisonDocumentIds,
-      templates,
-      countries
-    });
-  } else {
-    onData(null, {});
   }
+
+  onData(null, {
+    product: product,
+    media,
+    tags,
+    revisonDocumentIds
+  });
 }
 
 ProductAdminContainer.propTypes = {

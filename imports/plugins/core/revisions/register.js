@@ -10,11 +10,21 @@ Reaction.registerPackage({
     }
   },
   registry: [
-    // Settings Panel in Catalog
+    // Dashboard card
     {
-      label: "Product Revisions",
-      name: "catalog/settings/revisions/general",
-      provides: "catalogSettings",
+      provides: "dashboard",
+      label: "Revisions",
+      description: "Revision control",
+      icon: "fa fa-undo",
+      priority: 2,
+      container: "core"
+    },
+    // Settings Panel
+    {
+      label: "Revision Settings",
+      route: "/dashboard/revisions",
+      provides: "settings",
+      container: "dashboard",
       template: "revisionControlSettings"
     }
   ]

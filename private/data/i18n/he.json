@@ -9,16 +9,70 @@
       },
       "admin": {
         "shortcut": {
+          "dashboardLabel": "לוח המחוונים",
+          "ordersLabel": "הזמנות",
           "addProductLabel": "הוסף מוצר",
           "accountsLabel": "חשבונות"
         },
         "dashboard": {
+          "accountsLabel": "חשבונות",
+          "accountsTitle": "חשבונות",
+          "accountsDescription": "נהל הרשאות חבר",
+          "analyticsLabel": "ניתוח",
+          "analyticsTitle": "ניתוח",
+          "analyticsDescription": "ניתוח ואינטגרציות מעקב",
+          "authorizenetLabel": "Authorize.net",
+          "authorizenetTitle": "Authorize.net",
+          "authorizenetDescription": "תשלומי Authorize.net",
+          "shippingLabel": "משלוח",
+          "shippingTitle": "משלוח",
+          "shippingDescription": "תן תעריפי משלוח",
+          "braintreeLabel": "Braintree",
+          "braintreeTitle": "Braintree",
+          "braintreeDescription": "תשלומי Braintree",
+          "catalogLabel": "קטלוג",
+          "catalogTitle": "קטלוג",
+          "catalogDescription": "קטלוג מוצרים",
+          "coreLabel": "הגדרות",
+          "coreTitle": "לוח המחוונים",
+          "coreDescription": "תצורת Reaction",
+          "examplePaymentProviderLabel": "תשלום לדוגמה",
+          "examplePaymentProviderDescription": "שיטת תשלום לדוגמה",
           "i18NLabel": "i18n",
           "i18NTitle": "i18n",
           "i18NDescription": "תכניות שירות לאינטרנציונליזציה",
+          "inventoryLabel": "מלאי",
+          "inventoryTitle": "מלאי",
+          "inventoryDescription": "תכניות שירות למלאי",
+          "layoutLabel": "פריסה",
+          "layoutTitle": "פריסה",
+          "layoutDescription": "תכניות שירות לפריסה",
+          "connectLabel": "התחבר לרשתות",
+          "connectTitle": "התחבר לרשתות",
+          "connectDescription": "חבר את Reaction כשירות נפרס (deployed service)",
+          "ordersLabel": "הזמנות",
+          "ordersTitle": "הזמנות",
+          "ordersDescription": "בצע את ההזמנות שלך",
+          "paypalLabel": "PayPal",
+          "paypalTitle": "PayPal",
+          "paypalDescription": "תשלומי PayPal ",
           "routingLabel": "ניתוב",
           "routingTitle": "ניתוב",
           "routingDescription": "תכניות שירות לניתוב",
+          "searchLabel": "חיפוש",
+          "searchTitle": "חיפוש",
+          "searchDescription": "חיפוש מוצר",
+          "socialLabel": "חברתי",
+          "socialTitle": "חברתי",
+          "socialDescription": "קביעת תצורה לערוץ חברתי",
+          "taxesLabel": "מסים",
+          "taxesTitle": "מסים",
+          "taxesDescription": "תצורת מס",
+          "themesLabel": "נושאים",
+          "themesTitle": "נושאים",
+          "themesDescription": "נושאים ורכיבי ממשק משתמש",
+          "stripeLabel": "Stripe",
+          "stripeDescription": "תשלומי Stripe",
           "filtrationLabel": "סינון",
           "filtrationDescription": "סינון מוצרים ל- Reaction"
         },
@@ -33,11 +87,24 @@
         },
         "settings": {
           "accountSettingsLabel": "הגדרות חשבון",
-          "saveSuccess": "ההגדרות עודכנו.",
-          "saveFailed": "עדכון ההגדרות נכשל.",
           "addShopMemberLabel": "הוסף חבר חנות",
+          "authorizenetSettingsLabel": "הגדרות Authorize.net",
           "permissionsSettingsLabel": "הרשאות",
-          "localizationAndI18NLabel": "מיקום ו- i18n"
+          "braintreeSettingsLabel": "הגדרות Braintree",
+          "localizationAndI18NLabel": "מיקום ו- i18n",
+          "searchSettingsLabel": "הגדרות חיפוש",
+          "shopSettingsLabel": "הגדרות חנות",
+          "socialSettingsLabel": "הגדרות חברתיות",
+          "shippingSettingsLabel": "הגדרות משלוחים",
+          "stripeSettingsLabel": "הגדרות Stripe",
+          "inventorySettingsLabel": "הגדרות מלאי",
+          "analyticsSettingsLabel": "הגדרות ניתוח",
+          "paypalSettingsLabel": "הגדרות PayPal",
+          "reactionConnectLabel": "חיבור Reaction",
+          "examplePaymentSettingsLabel": "הגדרות תשלום לדוגמה",
+          "productSettingsLabel": "הגדרות מוצר",
+          "productDetailsLabel": "פרטי המוצר",
+          "taxSettingsLabel": "הגדרות מס"
         },
         "userAccountDropdown": {
           "profileLabel": "פרופיל"
@@ -63,8 +130,6 @@
         "submit": "שלח",
         "delete": "מחק",
         "deleted": "נמחק",
-        "archive": "העבר לארכיון",
-        "archived": "הועבר לארכיון",
         "create": "יצירה",
         "close": "סגירה",
         "settings": "הגדרות",
@@ -128,21 +193,67 @@
         "shopPaymentMethodsSaved": "הגדרות שיטות התשלום של החנות נשמרו.",
         "shopPaymentMethodsFailed": "עדכון הגדרות שיטות התשלום לחנות נכשל."
       },
-      "notifications": {
-        "body": {
-          "noNotifications": "עדיין אין הודעות",
-          "markAllAsRead": "סמן הכל כנקרא",
-          "recent": "לאחרונה",
-          "viewAll": "להציג את כל"
+      "mail": {
+        "headers": {
+          "email": "דוא\"ל",
+          "emailSettings": "הגדרות דוא\"ל",
+          "config": "תצורה",
+          "settings": "ספק דואר",
+          "status": "סטטוס",
+          "actions": "פעולות"
         },
-        "messages": {
-          "orderCancelled": "ההזמנה שלך בוטלה.",
-          "newOrder": "שההזמנה מעובדת.",
-          "forAdmin": "יש לך הזמנה חדשה.",
-          "orderDelivered": "ההזמנה נשלחה.",
-          "orderAccepted": "הזמנתך התקבלה.",
-          "orderShipped": "ההזמנה נשלחה."
+        "settings": {
+          "service": "שירות",
+          "user": "משתמש",
+          "password": "סיסמה",
+          "host": "מארח",
+          "port": "יציאה",
+          "passwordShow": "הצג",
+          "passwordHide": "הסתר",
+          "fieldNotSet": "לא הוגדר",
+          "selectService": "בחר שירות...",
+          "custom": "התאמה אישית"
+        },
+        "logs": {
+          "headers": {
+            "emailLogs": "יומני רישום דוא\"ל",
+            "email": "דוא\"ל",
+            "subject": "נושא",
+            "sent": "נשלח",
+            "status": "סטטוס"
+          },
+          "noEmails": "לא נשלחו הודעות דוא\"ל עדיין",
+          "limit": "כמות",
+          "retry": "נסה שנית",
+          "noneAvailble": "אין זמינויות"
+        },
+        "alerts": {
+          "error": "שגיאה: {{error}}",
+          "resendSuccess": "מנסה לשלוח שוב דוא\"ל אל {{email}}",
+          "missingService": "בחר בספק שירות דואר",
+          "userPassRequired": "יש להזין שם משתמש וסיסמה של SMTP עבור {{service}}",
+          "allFieldsRequired": "יש להזין את כל השדות לשירות מותאם אישית!",
+          "portNaN": "היציאה חייבת להיות מספר!",
+          "connectionFailed": "החיבור נכשל!",
+          "saveAnyway": "האם ברצונך לשמור את ההגדרות בכל מקרה?",
+          "saveSuccess": "הגדרות הדואר נשמרו.",
+          "saveFailed": "שמירת הגדרות הדואר נכשלה. {{error}}"
         }
+      },
+      "taxSettings": {
+        "noCustomTaxRatesFound": "לא נמצאו תעריפים מס בהתאמה אישית.",
+        "shopCustomTaxRatesSaved": "שיעור מס מותאם אישית נשמר.",
+        "shopCustomTaxRatesFailed": "שגיאה בשמירת שיעור המס.",
+        "shopTaxMethodsSaved": "שיטת המס נשמרה.",
+        "shopTaxMethodsFailed": "שמירת שיטת המס נכשלה.",
+        "customRatesDescription": "התאם אישית תעריפים",
+        "taxCode": "קוד מס",
+        "taxShipping": "כלול משלוח",
+        "taxRate": "תעריף",
+        "discountsIncluded": "כלול הנחות",
+        "taxable": "חייב במס",
+        "nottaxable": "לא חייב במס",
+        "confirmRateDelete": "אשר מחיקת שיעור מס"
       },
       "header": {
         "tagsAdd": "הוספת תגית",
@@ -155,7 +266,6 @@
         "tagsAdd": "הוספת תגית",
         "tagsEdit": "ערוך תגיות",
         "tagExists": "התגית כבר קיימת או שהיא ריקה.",
-        "tagInUse": "לא ניתן למחוק תגים הנמצאים בשימוש.",
         "dropFiles": "שחרר קבצים כדי להעלות",
         "addInventory": "הוסף מלאי",
         "barcode": "ברקוד",
@@ -170,7 +280,9 @@
         "addToCart": "הוסף לסל",
         "chooseOptions": "נא לבחור אפשרויות לפני ההוספה לסל",
         "outOfStock": "מצטערים, אך פריט זה אינו במלאי!",
-        "archiveErrorTheProduct": "המוצר",
+        "productDeleteError": "התגלתה שגיאה במחיקת {{product}}.",
+        "deleteErrorTheProduct": "המוצר",
+        "deleteErrorTheSelectedProducts": "המוצרים שנבחרו",
         "publishFirst": "יש לפרסם את המוצר לפני ההוספה לסל.",
         "quantityAbbreviation": "כמות",
         "selectOption": "יש לבחור אפשרות לפני ההוספה לסל",
@@ -183,8 +295,8 @@
         "publishProductHidden": "{{product}} מוסתר/ת כעת",
         "clonedAlert": "{{product}} משוכפל/ת",
         "clonedAlert_plural": "{{product}} משוכפל/ת",
-        "archivedAlert": "{{product}} הועבר/ה לארכיון",
-        "archivedAlert_plural": "{{product}} הועבר/ה לארכיון",
+        "deletedAlert": "{{product}} נמחקה/ה",
+        "deletedAlert_plural": "{{product}} נמחק/ה",
         "theProduct": "המוצר",
         "theSelectedProducts": "את המוצרים הנבחרים",
         "startTracking": "התחל מעקב",
@@ -226,15 +338,14 @@
         "removeVariant": "הסר",
         "removeVariantConfirm": "האם אתה בטוח שברצונך למחוק את {{title}}",
         "restoreVariantConfirm": "האם אתה בטוח שברצונך לשחזר את {{title}} מפח האשפה?",
-        "archiveVariantConfirm": "האם אתה בטוח שברצונך להעביר לארכיון את {{title}}",
         "thisVariant": "גרסת מוצר זו",
         "thisOption": "אפשרות זו",
         "duplicateProduct": "מוצר משוכפל",
         "pinProduct": "סמן מוצר",
         "toggleSize": "החלף מידה/גודל",
+        "deleteProduct": "מחק מוצר",
         "restoreProduct": "שחזר מוצר מפח האשפה",
-        "archiveThisProduct": "להעביר לארכיון מוצר זה?",
-        "archiveSelectedProducts": "להעביר לארכיון מוצרים שנבחרו?",
+        "deleteSelectedProducts": "למחוק מוצרים שנבחרו?",
         "publish": "פרסום",
         "moreOptions": "עוד אפשרויות",
         "details": "פרטים",
@@ -246,7 +357,6 @@
         "productIsNotVisible": "המוצר אינו גלוי"
       },
       "productVariant": {
-        "addVariantOptions": "הוסף אפשרויות כדי להפעיל  את הלחצן \"הוסף לעגלה\"",
         "inventoryQuantity": "כמות",
         "title": "תווית",
         "price": "מחיר",
@@ -256,7 +366,6 @@
         "fulfillmentService": "שירות ביצוע",
         "weight": "משקל",
         "taxable": "חייב במס",
-        "taxCode": "קוד מס",
         "inventoryManagement": "מעקב אחר מלאי",
         "inventoryManagementLabel": "רשום מוצר במערכת המלאי ועקוב אחרי הסטטוס שלו",
         "inventoryPolicy": "מנע כאשר אזל מהמלאי",
@@ -298,7 +407,6 @@
       "order": {
         "created": "נוצר",
         "reference": "סימוכין",
-        "cancelInvoice": "בטל",
         "invoice": "חשבונית",
         "ordersNotFound": "לא נמצאו הזמנות",
         "approveInvoice": "אישור",
@@ -306,7 +414,6 @@
         "capturePayment": "עיבוד תשלום",
         "paymentCaptured": "התשלום עובד",
         "capturedTotal": "סך התשלום שעובד",
-        "canceledLabel": "בוטל",
         "refundAmount": "סכום החזר",
         "applyRefundToThisOrder": "האם להחיל החזר של {{currencySymbol}}{{refund}} על הזמנה זו?",
         "applyRefund": "החל החזר",
@@ -333,6 +440,11 @@
           "completed": "הושלם",
           "canceled": "בוטל",
           "refunded": "החזר ניתן"
+        },
+        "paymentProvider": {
+          "braintree": {
+            "braintreeSettlementDelay": "Braintree אינו מאפשר החזרים עד הסדרת העסקאות. התהליך עשוי להימשך עד 24 שעות.  אנא נסה שוב מאוחר יותר."
+          }
         }
       },
       "orderShipping": {
@@ -453,7 +565,6 @@
       },
       "revisions": {
         "isDisabled": "ניהול הגרסאות מושבת. כל השינויים יפורסמו באופן מידי.",
-        "isEnabled": "ניהול גרסאות מופעל עבור המוצרים. יש לפרסם את כל השינויים לפני שיהפכו להיות גלויים עבור הלקוחות.",
         "unpublishedChanges": "שינויים שלא פורסמו",
         "publishChanges": "פרסם שינויים",
         "showChanges": "הצג שינויים",
@@ -488,8 +599,78 @@
         "reviewPayment": "סקירה ותשלום",
         "complete": "הושלם"
       },
+      "checkoutPayment": {
+        "addPaymentToCompleteOrder": "הוסף תשלום על מנת להשלים את ההזמנה",
+        "processingError": "התגלתה בעיה עם התשלום שלך.",
+        "completeYourOrder": "השלם את הזמנתך",
+        "noPaymentMethods": "לא הוגדרו שיטות תשלום.",
+        "configureNow": "קבע תצורה עכשיו.",
+        "failedToPlaceOrder": "שליחת ההזמנה נכשלה."
+      },
       "checkoutReview": {
         "review": "סקירה"
+      },
+      "checkoutShipping": {
+        "selectShippingOption": "בחר אפשרות משלוח",
+        "noShippingMethods": "לא מוגדרות אפשרויות משלוח.",
+        "configureNow": "הגדר עכשיו.",
+        "shipping": "משלוח"
+      },
+      "shipping": {
+        "addShippingProvider": "הוסף ספק משלוחים",
+        "editShippingProvider": "ערוך ספק משלוחים",
+        "addShippingMethod": "הוסף שיטת משלוח",
+        "editShippingMethod": "ערוך שיטת משלוח",
+        "deleteShippingMethod": "מחק שיטת משלוח",
+        "noSettingsForThisView": "אין הגדרות לתצוגה זו",
+        "noShippingMethods": "אין שיטות משלוח מוגדרות.",
+        "removeShippingMethodConfirm": "האם אתה בטוח שברצונך למחוק את {{method}}?",
+        "removeShippingMethodTitle": "הסר שיטת משלוח",
+        "shippingMethodDeleted": "שיטת משלוח זו נמחקה.",
+        "removeShippingProvider": "הסר ספק משלוחים",
+        "removeShippingProviderConfirm": "האם אתה בטוח שברצונך למחוק את {{provider}}?",
+        "shippingProviderSaved": "ספק המשלוחים נשמר.",
+        "shippingProviderUpdated": "נתוני ספק משלוח עודכנו.",
+        "shippingMethodRateAdded": "תעריף שיטת המשלוח נוסף.",
+        "shippingMethodRateUpdated": "תעריף שיטת המשלוח עודכן.",
+        "name": "שם",
+        "label": "תווית",
+        "group": "קבוצה",
+        "cost": "עלות",
+        "handling": "בטיפול",
+        "rate": "תעריף",
+        "enabled": "הופעל",
+        "disabled": "הושבת",
+        "addRate": "הוסף תעריף",
+        "updateRate": "עדכן תעריף {{name}}",
+        "addNewCondition": "הוסף תנאי חדש",
+        "deleteCondition": "מחק תנאי",
+        "provider": {
+          "name": "קוד שירות",
+          "label": "תווית ציבורית",
+          "enabled": "הופעל"
+        }
+      },
+      "shippingMethod": {
+        "name": "שם שיטה",
+        "label": "תווית ציבורית",
+        "group": "קבוצה",
+        "cost": "עלות",
+        "handling": "בטיפול",
+        "rate": "תעריף",
+        "enabled": "הופעל",
+        "matchingCartRanges": "התאמת טווחי עגלה",
+        "validRanges": {
+          "begin": "התחל",
+          "end": "סוף"
+        },
+        "matchingLocales": "התאמת אזורים",
+        "validLocales": {
+          "origination": "מ-",
+          "destination": "אל",
+          "deliveryBegin": "אומדן משלוח",
+          "deliveryEnd": "אומדן משלוח"
+        }
       },
       "uom": {
         "OZ": "אונקיות",
@@ -617,6 +798,16 @@
           "passwordResetSend": "הודעת דוא\"ל עם קישור לאיפוס הסיסמה נשלחה.",
           "invitationSent": "ההזמנה נשלחה",
           "sendInvitation": "שלח הזמנה"
+        },
+        "reactionUI": {
+          "editTheme": "ערוך נושא",
+          "duplicateTheme": "שכפל נושא",
+          "duplicateThemeError": "לא ניתן לשכפל נושא",
+          "publishThemeError": "לא ניתן לפרסם את הנושא {{themeName}}",
+          "components": {
+            "navbar": "סרגל ניווט",
+            "button": "לחצן"
+          }
         },
         "error": {
           "emailRequired": "חובה להזין כתובת דוא\"ל",

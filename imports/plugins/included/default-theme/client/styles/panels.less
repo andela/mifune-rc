@@ -15,17 +15,13 @@
   }
 }
 
-.panel-heading {
-  text-transform: capitalize;
-}
-
 .flex-item > .panel {
   margin-bottom: 0;
   min-height: 220px;
   height: 100%;
 }
 
-.panel, .panel-default, .panel-active {
+.panel, .panel-default {
   .display(flex);
   .flex(1 1 auto);
   .flex-direction(column);
@@ -42,7 +38,7 @@ label.panel-title {
 }
 
 .panel-active > .panel-heading {
-  background-color: @gray-lightest;
+  background-color: @brand-accent-color;
 }
 
 .action-view-body .panel-group {
@@ -73,7 +69,7 @@ label.panel-title {
 }
 
 .panel-group-accordian .panel-active a.panel-heading {
-  background-color: @gray-lightest;
+  background-color: @brand-accent-color;
 }
 
 .panel-heading-flex {
@@ -136,6 +132,13 @@ label.panel-title {
 .panel-toolbar .panel-controls {
   .display(flex);
   .justify-content(center);
+}
+
+.panel-header--brand {
+  padding: 10px 20px;
+  background-color: darken(@brand-primary-color, 10%);
+
+  color: #fff;
 }
 
 .panel-content,

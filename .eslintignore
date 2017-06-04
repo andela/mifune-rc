@@ -3,4 +3,3 @@
 *.min.*
 server/plugins.js
 client/plugins.js
-packages/*

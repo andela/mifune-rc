@@ -5,7 +5,7 @@ class Loading extends Component {
   render() {
     return (
       <div className="spinner-container spinner-container-lg">
-        <CircularProgress indeterminate={true} />
+        <CircularProgress indetermate={true} />
       </div>
     );
   }

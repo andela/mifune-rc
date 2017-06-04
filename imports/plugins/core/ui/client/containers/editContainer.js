@@ -1,14 +1,7 @@
 import React, { Children, Component, PropTypes } from "react";
 import { Reaction } from "/client/api";
 import { EditButton, VisibilityButton, Translation } from "/imports/plugins/core/ui/client/components";
-import { composeWithTracker } from "/lib/api/compose";
-
-const styles = {
-  editContainerItem: {
-    display: "flex",
-    marginLeft: 5
-  }
-};
+import { composeWithTracker } from "react-komposer";
 
 class EditContainer extends Component {
 
@@ -27,15 +20,8 @@ class EditContainer extends Component {
       label: props.label,
       i18nKeyLabel: props.i18nKeyLabel,
       template: props.editView,
-      data: {
-        data: props.data,
-        viewProps: {
-          field: props.field
-        }
-      }
+      data: props.data
     });
-
-    Reaction.state.set("edit/focus", props.field);
 
     return true;
   }
@@ -57,12 +43,10 @@ class EditContainer extends Component {
   renderVisibilityButton() {
     if (this.props.showsVisibilityButton) {
       return (
-        <span className="edit-container-item" style={styles.editContainerItem}>
-          <VisibilityButton
-            onClick={this.handleVisibilityButtonClick}
-            toggleOn={this.props.data.isVisible}
-          />
-        </span>
+        <VisibilityButton
+          onClick={this.handleVisibilityButtonClick}
+          toggleOn={this.props.data.isVisible}
+        />
       );
     }
 
@@ -117,13 +101,11 @@ class EditContainer extends Component {
     }
 
     return (
-      <span className="edit-container-item" style={styles.editContainerItem}>
-        <EditButton
-          onClick={this.handleEditButtonClick}
-          status={status}
-          tooltip={tooltip}
-        />
-      </span>
+      <EditButton
+        onClick={this.handleEditButtonClick}
+        status={status}
+        tooltip={tooltip}
+      />
     );
   }
 
@@ -175,12 +157,12 @@ EditContainer.propTypes = {
 
 function composer(props, onData) {
   let hasPermission;
-  const viewAs = Reaction.getUserPreferences("reaction-dashboard", "viewAs", "administrator");
+  const viewAs = Reaction.Router.getQueryParam("as");
 
   if (props.disabled === true || viewAs === "customer") {
     hasPermission = false;
   } else {
-    hasPermission = Reaction.hasPermission(props.permissions);
+    hasPermission = Reaction.hasPermission(props.premissions);
   }
 
   onData(null, {

@@ -1,8 +1,7 @@
 import { Template } from "meteor/templating";
-import { Reaction, Logger, i18next } from "/client/api";
-import { Shops } from "/lib/collections";
 import { localeDep, i18nextDep } from  "./main";
 import { formatPriceString } from "./currency";
+import { Reaction, Logger, i18next } from "/client/api";
 
 /**
  * i18n
@@ -16,7 +15,7 @@ import { formatPriceString } from "./currency";
  */
 Template.registerHelper("i18n", function (i18nKey, i18nMessage) {
   if (!i18nKey || typeof i18nMessage !== "string") {
-    Logger.warn("i18n key string required to translate", i18nKey, i18nMessage);
+    Logger.info("i18n key string required to translate", i18nKey, i18nMessage);
     return "";
   }
   check(i18nKey, String);
@@ -24,8 +23,10 @@ Template.registerHelper("i18n", function (i18nKey, i18nMessage) {
 
   i18nextDep.depend();
 
+  const message = new Spacebars.SafeString(i18nMessage);
+
   // returning translated key
-  return i18next.t(i18nKey, { defaultValue: i18nMessage });
+  return i18next.t(i18nKey, {defaultValue: message});
 });
 
 /**
@@ -35,13 +36,6 @@ Template.registerHelper("i18n", function (i18nKey, i18nMessage) {
  */
 Template.registerHelper("currencySymbol", function () {
   const locale = Reaction.Locale.get();
-  const localStorageCurrency = localStorage.getItem("currency");
-  if (localStorageCurrency) {
-    const shop = Shops.findOne();
-    if (Match.test(shop, Object) && shop.currencies) {
-      return shop.currencies[localStorageCurrency].symbol;
-    }
-  }
   return locale.currency.symbol;
 });
 
@@ -50,10 +44,41 @@ Template.registerHelper("currencySymbol", function () {
  * @summary return shop /locale specific formatted price
  * also accepts a range formatted with " - "
  * @param {String} currentPrice - currentPrice or "xx.xx - xx.xx" formatted String
- * @param {Boolean} useDefaultShopCurrency - flag for displaying shop's currency in Admin view of PDP
  * @return {String} returns locale formatted and exchange rate converted values
  */
-Template.registerHelper("formatPrice", function (formatPrice, useDefaultShopCurrency) {
+Template.registerHelper("formatPrice", function (formatPrice) {
   localeDep.depend();
-  return formatPriceString(formatPrice, useDefaultShopCurrency);
+  return formatPriceString(formatPrice);
+});
+
+Object.assign(Reaction, {
+  /**
+   * translateRegistry
+   * @summary added i18n strings to registry
+   * @param {Object} registry  registry object
+   * @param {Object} [app] app object. It contains registries
+   * @return {Object} with updated registry
+   */
+  translateRegistry(registry, app) {
+    let registryLabel = "";
+    let i18nKey = "";
+    // first we check the default place for a label
+    if (registry.label) {
+      registryLabel = registry.label.toCamelCase();
+      i18nKey = `admin.${registry.provides}.${registryLabel}`;
+      // and if we don"t find it, we are trying to look at first
+      // registry entry
+    } else if (app && app.registry && app.registry.length &&
+      app.registry[0].label) {
+      registryLabel = app.registry[0].label.toCamelCase();
+      i18nKey = `admin.${app.registry[0].provides}.${registryLabel}`;
+    }
+    registry.i18nKeyLabel = `${i18nKey}Label`;
+    registry.i18nKeyDescription = `${i18nKey}Description`;
+    registry.i18nKeyPlaceholder = `${i18nKey}Placeholder`;
+    registry.i18nKeyTooltip = `${i18nKey}Tooltip`;
+    registry.i18nKeyTitle = `${i18nKey}Title`;
+
+    return registry;
+  }
 });

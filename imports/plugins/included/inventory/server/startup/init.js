@@ -9,7 +9,7 @@ Hooks.Events.add("afterCoreInit", () => {
   if (!inventory) {
     const products = Products.find().fetch();
     for (const product of products) {
-      Logger.debug(`Registering product ${product.title}`);
+      Logger.info(`Registering product ${product.title}`);
       registerInventory(product);
     }
   }

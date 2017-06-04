@@ -11,7 +11,7 @@ import { Template } from "meteor/templating";
  */
 Template.cartCompleted.helpers({
   orderCompleted: function () {
-    const id = Reaction.Router.getQueryParam("_id");
+    const id =  Reaction.Router.getQueryParam("_id");
     if (id) {
       const ccoSub = Meteor.subscribe("CompletedCartOrder", Meteor.userId(), id);
       if (ccoSub.ready()) {
@@ -27,16 +27,10 @@ Template.cartCompleted.helpers({
     });
   },
   orderStatus: function () {
-    switch (this.workflow.status) {
-      case "new":
-        return i18next.t("cartCompleted.submitted");
-      case "coreOrderWorkflow/processing":
-        return i18next.t("cartCompleted.processing");
-      case "coreOrderWorkflow/completed":
-        return i18next.t("cartCompleted.completed");
-      default:
-        return this.workflow.status;
+    if (this.workflow.status === "new") {
+      return i18next.t("cartCompleted.submitted");
     }
+    return this.workflow.status;
   },
   userOrders: function () {
     if (Meteor.user()) {
@@ -60,18 +54,7 @@ Template.cartCompleted.events({
     const email = templateInstance.find("input[name=email]").value;
     check(email, String);
     const cartId = Reaction.Router.getQueryParam("_id");
-
-    return Meteor.call("orders/addOrderEmail", cartId, email, (err) => {
-      if (err) {
-        Alerts.toast(i18next.t("mail.alerts.cantSendEmail"), "error");
-      } else {
-        const order = Orders.findOne({
-          userId: Meteor.userId(),
-          cartId: Reaction.Router.getQueryParam("_id")
-        });
-        Meteor.call("orders/sendNotification", order);
-      }
-    });
+    return Meteor.call("orders/addOrderEmail", cartId, email);
   }
 });
 

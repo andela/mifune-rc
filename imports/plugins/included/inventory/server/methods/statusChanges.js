@@ -60,7 +60,7 @@ Meteor.methods({
     const defaultStatus = currentStatus || "new"; // default to the "new" status
     const backorderStatus = notFoundStatus || "backorder"; // change status to options object
     let reservationCount;
-    Logger.debug(`Moving Inventory items from ${defaultStatus} to ${reservationStatus}`);
+    Logger.info(`Moving Inventory items from ${defaultStatus} to ${reservationStatus}`);
 
     // update inventory status for cartItems
     for (const item of cartItems) {
@@ -84,14 +84,14 @@ Meteor.methods({
       const availableInventoryQty = availableInventory.count();
       let existingReservationQty = existingReservations.count();
 
-      Logger.debug("totalRequiredQty", totalRequiredQty);
-      Logger.debug("availableInventoryQty", availableInventoryQty);
+      Logger.info("totalRequiredQty", totalRequiredQty);
+      Logger.info("availableInventoryQty", availableInventoryQty);
 
       // if we don't have existing inventory we create backorders
       if (totalRequiredQty > availableInventoryQty) {
         // TODO put in a dashboard setting to allow backorder or altenate handler to be used
         const backOrderQty = Number(totalRequiredQty - availableInventoryQty - existingReservationQty);
-        Logger.debug(`no inventory found, create ${backOrderQty} ${backorderStatus}`);
+        Logger.info(`no inventory found, create ${backOrderQty} ${backorderStatus}`);
         // define a new reservation
         const reservation = {
           productId: item.productId,
@@ -120,7 +120,7 @@ Meteor.methods({
       let i = 1;
       while (i < newReservedQty) {
         // updated existing new inventory to be reserved
-        Logger.debug(
+        Logger.info(
           `updating reservation status ${i} of ${newReservedQty - 1}/${totalRequiredQty} items.`);
         // we should be updating existing inventory here.
         // backorder process created additional backorder inventory if there
@@ -140,7 +140,7 @@ Meteor.methods({
         i++;
       }
     }
-    Logger.debug(
+    Logger.info(
       `finished creating ${reservationCount} new ${reservationStatus} reservations`);
     return reservationCount;
   },
@@ -195,7 +195,7 @@ Meteor.methods({
         i++;
       }
     }
-    Logger.debug("inventory/clearReserve", newStatus);
+    Logger.info("inventory/clearReserve", newStatus);
   },
   /**
    * inventory/clearReserve
@@ -260,19 +260,23 @@ Meteor.methods({
 
     // insert backorder
     let i = 0;
-    const batch = Inventory.rawCollection().initializeUnorderedBulkOp();
-    if (batch) {
-      while (i < backOrderQty) {
-        const id = Inventory._makeNewID();
-        batch.insert(Object.assign({ _id: id }, newReservation));
-        i++;
-      }
 
-      const execute = Meteor.wrapAsync(batch.execute, batch);
-      if (batch.length) {
+    // check if we support bulk operations
+    const currentBatch = Inventory._collection.rawCollection().currentBatch;
+
+    if (currentBatch && currentBatch.operations && currentBatch.operations.length > 0) {
+      const batch = Inventory._collection.rawCollection().initializeUnorderedBulkOp();
+      if (batch) {
+        while (i < backOrderQty) {
+          const id = Inventory._makeNewID();
+          batch.insert(Object.assign({ _id: id }, newReservation));
+          i++;
+        }
+
+        const execute = Meteor.wrapAsync(batch.execute, batch);
         const inventoryBackorder = execute();
         const inserted = inventoryBackorder.nInserted;
-        Logger.debug(`created ${inserted} backorder records for product ${newReservation.productId}, variant ${newReservation.variantId}`);
+        Logger.info(`created ${inserted} backorder records for product ${newReservation.productId}, variant ${newReservation.variantId}`);
         return inserted;
       }
     }
@@ -291,7 +295,7 @@ Meteor.methods({
     // TODO implement inventory/lowstock calculations
     // placeholder is here to give plugins a place to hook into
     //
-    Logger.debug("inventory/lowStock");
+    Logger.info("inventory/lowStock");
   },
   /**
    * inventory/remove

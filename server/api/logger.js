@@ -1,52 +1,40 @@
 import bunyan from "bunyan";
 import bunyanFormat from "bunyan-format";
-import Bunyan2Loggly from "bunyan-loggly";
-import { includes } from "lodash";
+import _ from "lodash";
 
 // configure bunyan logging module for reaction server
 // See: https://github.com/trentm/node-bunyan#levels
 const levels = ["FATAL", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"];
+const mode = process.env.NODE_ENV || "production";
+let isDebug = Meteor.settings.isDebug || process.env.REACTION_DEBUG || "INFO";
 
-// set stdout log level
-let level = process.env.REACTION_LOG_LEVEL || Meteor.settings.REACTION_LOG_LEVEL || "INFO";
-let outputMode = "short";
-
-level = level.toUpperCase();
-
-if (!includes(levels, level)) {
-  level = "INFO";
+if (isDebug === true || mode === "development" && isDebug !== false) {
+  if (typeof isDebug !== "boolean" && typeof isDebug !== undefined) {
+    isDebug = isDebug.toUpperCase();
+  }
+  if (!_.includes(levels, isDebug)) {
+    isDebug = "WARN";
+  }
 }
 
-if (level === "TRACE") {
-  outputMode = "json";
+let formatOut;
+
+if (process.env.VELOCITY_CI === "1") {
+  formatOut = process.stdout;
+} else {
+  formatOut = bunyanFormat({
+    outputMode: "short",
+    levelInString: false
+  });
 }
 
-// default console config (stdout)
-const streams = [{
-  level,
-  stream: bunyanFormat({ outputMode })
-}];
-
-// Loggly config (only used if configured)
-const logglyToken = process.env.LOGGLY_TOKEN;
-const logglySubdomain = process.env.LOGGLY_SUBDOMAIN;
-
-if (logglyToken && logglySubdomain) {
-  const logglyStream = {
-    type: "raw",
-    level: process.env.LOGGLY_LOG_LEVEL || "DEBUG",
-    stream: new Bunyan2Loggly({
-      token: logglyToken,
-      subdomain: logglySubdomain
-    })
-  };
-  streams.push(logglyStream);
-}
-
-// create default logger instance
 const Logger = bunyan.createLogger({
   name: "Reaction",
-  streams
+  stream: isDebug !== "DEBUG" ? formatOut : process.stdout,
+  level: "debug"
 });
+
+// set logging level
+Logger.level(isDebug);
 
 export default Logger;

@@ -63,7 +63,7 @@ describe("Add/Create cart methods", function () {
       sandbox.stub(Reaction, "getShopId", () => shop._id);
       const cartInsertSpy = sandbox.spy(Cart, "insert");
       const cartId = Meteor.call("cart/createCart", userId, sessionId);
-      const cart = Cart.findOne({ userId: userId });
+      const cart = Cart.findOne({userId: userId});
       expect(cartInsertSpy).to.have.been.called;
       expect(cartId).to.equal(cart._id);
     });
@@ -185,7 +185,7 @@ describe("Add/Create cart methods", function () {
       return done();
     });
 
-    it("should throw an error if order creation has failed", function () {
+    it("should throw an error if order creation has failed", function (done) {
       const cart = Factory.create("cartToOrder");
       spyOnMethod("copyCartToOrder", cart.userId);
       // The main moment of test. We are spy on `insert` operation but do not
@@ -196,6 +196,7 @@ describe("Add/Create cart methods", function () {
       }
       expect(copyCartFunc).to.throw(Meteor.Error, /Invalid request/);
       expect(insertStub).to.have.been.called;
+      return done();
     });
 
     it("should create an order", function (done) {

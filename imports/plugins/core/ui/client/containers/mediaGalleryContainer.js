@@ -1,11 +1,10 @@
 import React, { Component, PropTypes } from "react";
-import Measure from "react-measure";
 import update from "react/lib/update";
-import { composeWithTracker } from "/lib/api/compose";
+import { composeWithTracker } from "react-komposer";
 import { MediaGallery } from "../components";
 import { Reaction } from "/client/api";
 import { ReactionProduct } from "/lib/api";
-import { Media, Revisions } from "/lib/collections";
+import { Media } from "/lib/collections";
 
 function uploadHandler(files) {
   // TODO: It would be cool to move this logic to common ValidatedMethod, but
@@ -52,24 +51,8 @@ function uploadHandler(files) {
 }
 
 class MediaGalleryContainer extends Component {
-  // Load first image as featuredImage
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      featuredMedia: props.media[0],
-      dimensions: {
-        width: -1,
-        height: -1
-      }
-    };
-  }
-
-  componentWillReceiveProps(nextProps) {
-    this.setState({
-      featuredMedia: nextProps.media[0],
-      media: nextProps.media
-    });
+  state = {
+    featuredMedia: undefined
   }
 
   handleDrop = (files) => {
@@ -98,15 +81,7 @@ class MediaGalleryContainer extends Component {
           // updateImagePriorities();
         });
       }
-      // show media as removed (since it will not disappear until changes are published
     });
-  }
-
-  get allowFeaturedMediaHover() {
-    if (this.state.featuredMedia) {
-      return true;
-    }
-    return false;
   }
 
   get media() {
@@ -155,79 +130,31 @@ class MediaGalleryContainer extends Component {
   }
 
   render() {
-    const { width, height } = this.state.dimensions;
-
     return (
-      <Measure
-        onMeasure={(dimensions) => {
-          this.setState({ dimensions });
-        }}
-      >
-        <MediaGallery
-          allowFeaturedMediaHover={this.allowFeaturedMediaHover}
-          featuredMedia={this.state.featuredMedia}
-          onDrop={this.handleDrop}
-          onMouseEnterMedia={this.handleMouseEnterMedia}
-          onMouseLeaveMedia={this.handleMouseLeaveMedia}
-          onMoveMedia={this.handleMoveMedia}
-          onRemoveMedia={this.handleRemoveMedia}
-          {...this.props}
-          media={this.media}
-          mediaGalleryHeight={height}
-          mediaGalleryWidth={width}
-        />
-      </Measure>
+      <MediaGallery
+        allowFeaturedMediaHover={this.props.editable === false}
+        featuredMedia={this.state.featuredMedia}
+        onDrop={this.handleDrop}
+        onMouseEnterMedia={this.handleMouseEnterMedia}
+        onMouseLeaveMedia={this.handleMouseLeaveMedia}
+        onMoveMedia={this.handleMoveMedia}
+        onRemoveMedia={this.handleRemoveMedia}
+        {...this.props}
+        media={this.media}
+      />
     );
   }
-}
-
-function fetchMediaRevisions() {
-  const productId = ReactionProduct.selectedProductId();
-  const mediaRevisions = Revisions.find({
-    "parentDocument": productId,
-    "documentType": "image",
-    "workflow.status": {
-      $nin: ["revision/published"]
-    }
-  }).fetch();
-  return mediaRevisions;
-}
-
-// resort the media in
-function sortMedia(media) {
-  const sortedMedia = _.sortBy(media, function (m) { return m.metadata.priority;});
-  return sortedMedia;
-}
-
-// Search through revisions and if we find one for the image, stick it on the object
-function appendRevisionsToMedia(props, media) {
-  if (!Reaction.hasPermission(props.permission || ["createProduct"])) {
-    return media;
-  }
-  const mediaRevisions = fetchMediaRevisions();
-  const newMedia = [];
-  for (const image of media) {
-    image.revision = undefined;
-    for (const revision of mediaRevisions) {
-      if (revision.documentId === image._id) {
-        image.revision = revision;
-        image.metadata.priority = revision.documentData.priority;
-      }
-    }
-    newMedia.push(image);
-  }
-  return sortMedia(newMedia);
 }
 
 function composer(props, onData) {
   let media;
   let editable;
-  const viewAs = Reaction.getUserPreferences("reaction-dashboard", "viewAs", "administrator");
+  const viewAs = Reaction.Router.getQueryParam("as");
 
   if (!props.media) {
     // Fetch media based on props
   } else {
-    media = appendRevisionsToMedia(props, props.media);
+    media = props.media;
   }
 
   if (viewAs === "customer") {

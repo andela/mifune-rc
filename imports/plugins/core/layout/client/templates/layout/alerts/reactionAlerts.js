@@ -68,17 +68,8 @@ Object.assign(Alerts, {
         ...titleOrOptions
       }).then((isConfirm) => {
         if (isConfirm === true && typeof messageOrCallback === "function") {
-          messageOrCallback(isConfirm, false);
+          messageOrCallback(isConfirm);
         }
-      }, dismiss => {
-        if (dismiss === "cancel" || dismiss === "esc" || dismiss === "overlay") {
-          messageOrCallback(false, dismiss);
-        }
-      }).catch(function (err) {
-        if (err === "cancel" || err === "overlay" || err === "timer") {
-          return undefined; // Silence error
-        }
-        throw err;
       });
     }
 
@@ -94,11 +85,6 @@ Object.assign(Alerts, {
       if (isConfirm === true && typeof callback === "function") {
         callback(isConfirm);
       }
-    }).catch(function (err) {
-      if (err === "cancel" || err === "overlay" || err === "timer") {
-        return undefined; // Silence error
-      }
-      throw err;
     });
   },
 

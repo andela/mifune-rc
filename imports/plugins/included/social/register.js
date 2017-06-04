@@ -44,7 +44,6 @@ Reaction.registerPackage({
     }]
   }, {
     label: "Social Settings",
-    icon: "fa fa-share-alt",
     route: "/dashboard/social",
     provides: "settings",
     container: "dashboard",

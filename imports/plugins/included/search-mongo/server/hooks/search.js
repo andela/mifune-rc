@@ -69,9 +69,7 @@ Products.after.update((userId, doc, fieldNames) => {
     if (modifiedFields.length) {
       Logger.debug(`Rewriting search record for ${doc.title}`);
       ProductSearch.remove(productId);
-      if (!doc.isDeleted) { // do not create record if product was archived
-        buildProductSearchRecord(productId);
-      }
+      buildProductSearchRecord(productId);
     } else {
       Logger.debug("No watched fields modified, skipping");
     }
@@ -86,6 +84,6 @@ Products.after.insert((userId, doc) => {
   if (ProductSearch && !Meteor.isAppTest && doc.type === "simple") {
     const productId = doc._id;
     buildProductSearchRecord(productId);
-    Logger.debug(`Added product ${productId} to ProductSearch`);
+    Logger.info(`Added product ${productId} to ProductSearch`);
   }
 });

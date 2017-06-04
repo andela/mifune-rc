@@ -2,11 +2,15 @@ import { ProductAdminContainer } from "../containers";
 
 Template.ProductAdmin.helpers({
   component() {
-    const currentData = Template.currentData() || {};
+    const currentData = Template.currentData();
+    let data;
 
-    return {
-      ...currentData,
+    if (currentData && currentData.data) {
+      data = currentData.data;
+    }
+
+    return Object.assign({}, data, {
       component: ProductAdminContainer
-    };
+    });
   }
 });

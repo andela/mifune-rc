@@ -48,6 +48,7 @@
         "addToCart": "Legg i handlekurv",
         "chooseOptions": "Vær vennlig å velg variant før du legger i handlekurven.",
         "outOfStock": "Beklager, denne varen finnes ikke på lager!",
+        "productDeleteError": "En feil oppstod ved sletting av produkt.",
         "publishFirst": "Publiser produkt først før du kan legge det i handlekurven.",
         "quantityAbbreviation": "stk",
         "selectOption": "Velg et alternativ før du legger i handlekurven",
@@ -56,8 +57,8 @@
         "soldOut": "Utsolgt!",
         "backOrder": "Restordre",
         "limitedSupply": "Begrenset lager",
-        "publishProductVisible": "{{product}}er synlig",
-        "publishProductHidden": "{{product}}er skjult",
+        "publishProductVisible": "er synlig",
+        "publishProductHidden": "er skjult",
         "startTracking": "Start sporing",
         "addBarcode": "Legg til Strekkode",
         "quantity": "Antall",
@@ -78,6 +79,7 @@
         "duplicateProduct": "Dupliser Produkt",
         "pinProduct": "Fest Produkt",
         "toggleSize": "Bytt størrelse",
+        "deleteProduct": "Slett Produkt",
         "publish": "Publiser",
         "moreOptions": "Flere varianter"
       },
@@ -86,8 +88,8 @@
         "createVariant": "Opprett variant"
       },
       "gridPackage": {
-        "pkgEnabled": "{{app}} er aktivert.",
-        "pkgDisabled": " {{app}}er deaktivert."
+        "pkgEnabled": " er aktivert.",
+        "pkgDisabled": " er deaktivert."
       },
       "cartDrawer": {
         "empty": "Vi er lei handlekurven din er tom.",
@@ -108,7 +110,6 @@
       "order": {
         "created": "Opprettet",
         "reference": "Referanse",
-        "cancelInvoice": "Avbryt",
         "invoice": "Faktura",
         "ordersNotFound": "Ingen Ordre Funnet",
         "approveInvoice": "Godkjenn",
@@ -116,7 +117,6 @@
         "capturePayment": "Til betaling",
         "paymentCaptured": "Betalt",
         "capturedTotal": "Totalt innbetalt",
-        "canceledLabel": "Avbrutt",
         "refundAmount": "Refundert",
         "applyRefund": "Refunder",
         "adjustedTotal": "Endret Total",
@@ -194,8 +194,19 @@
         "reviewPayment": "Se igjennom",
         "complete": "Fullført"
       },
+      "checkoutPayment": {
+        "addPaymentToCompleteOrder": "Legg til betalingsalternativ for å fullføre bestillingen",
+        "processingError": "Det oppstod et problem med din betaling.",
+        "completeYourOrder": "Fullfør ordren"
+      },
       "checkoutReview": {
         "review": "Se igjennom"
+      },
+      "checkoutShipping": {
+        "selectShippingOption": "Velg frakt alternativ",
+        "noShippingMethods": "Det er ingen tilgjengelige frakt alternativer.",
+        "configureNow": "Konfigurer nå.",
+        "shipping": "Frakt"
       },
       "consoleIcon": {
         "iconTitle": "Vis konsoll",

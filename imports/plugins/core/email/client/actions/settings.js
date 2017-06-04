@@ -1,7 +1,20 @@
 import Alert from "sweetalert2";
-import { i18next } from "/client/api";
+import { Reaction, i18next } from "/client/api";
 
 export default {
+
+  /**
+   * Open the email settings menu
+   * @return {Boolean} returns true if action view toggled
+   */
+  toggleSettings() {
+    Reaction.showActionView({
+      label: i18next.t("mail.headers.emailSettings"),
+      template: "emailSettings"
+    });
+    return true;
+  },
+
   /**
    * Save email settings
    * @param {Object} settings - object of mail provider settings

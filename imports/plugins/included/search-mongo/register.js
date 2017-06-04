@@ -36,7 +36,6 @@ Reaction.registerPackage({
     // Settings Panel
     {
       label: "Search Settings",
-      icon: "fa fa-search",
       route: "/dashboard/search",
       provides: "settings",
       container: "dashboard",
@@ -44,3 +43,4 @@ Reaction.registerPackage({
     }
   ]
 });
+

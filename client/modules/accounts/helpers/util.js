@@ -1,36 +1,10 @@
 import _ from "lodash";
+import { Template } from "meteor/templating";
 
 function capitalize(str) {
   const finalString = str === null ? "" : String(str);
   return finalString.charAt(0).toUpperCase() + str.slice(1);
 }
-
-const providers = {
-  Facebook: {},
-  Google: {},
-  Twitter: {}
-};
-
-providers.Facebook.fields = function () {
-  return [
-    { property: "appId", label: "App ID" },
-    { property: "secret", label: "App Secret" }
-  ];
-};
-
-providers.Google.fields = function () {
-  return [
-    { property: "clientId", label: "Client ID" },
-    { property: "secret", label: "Client secret" }
-  ];
-};
-
-providers.Twitter.fields = function () {
-  return [
-    { property: "consumerKey", label: "API key" },
-    { property: "secret", label: "API secret" }
-  ];
-};
 
 export class ServiceConfigHelper {
 
@@ -51,7 +25,7 @@ export class ServiceConfigHelper {
 
   configFieldsForService(name) {
     const capitalizedName = this.capitalizedServiceName(name);
-    const template = providers[capitalizedName];
+    const template = Template[`configureLoginServiceDialogFor${capitalizedName}`];
 
     if (template) {
       const fields = template.fields();
@@ -75,7 +49,7 @@ export class ServiceConfigHelper {
     const configurations = ServiceConfiguration.configurations.find().fetch();
 
     return _.map(availableServices, (name) => {
-      const matchingConfigurations = _.filter(configurations, { service: name });
+      const matchingConfigurations = _.filter(configurations, {service: name});
       let service = {
         name,
         label: this.capitalizedServiceName(name),

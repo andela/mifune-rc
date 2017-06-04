@@ -1,10 +1,10 @@
-/* eslint-disable */
+/* eslint no-cond-assign: 1 */
 //
 // TODO facebook social templates need review to ensure proper use of reaction layouts
 //
 Template.facebook.onRendered(function () {
   let ref;
-  if (this.data.placement === "footer" && (((ref = this.data.apps.facebook) !== null ? ref.profilePage : void 0) !== null)) { // eslint-disable-line no-cond-assign
+  if (this.data.placement === "footer" && (((ref = this.data.apps.facebook) !== null ? ref.profilePage : void 0) !== null)) {
     return this.$(".facebook-share").attr("href", this.data.apps.facebook.profilePage);
   }
   //
@@ -61,7 +61,7 @@ Template.facebook.onRendered(function () {
           method: "share",
           display: "popup",
           href: url
-        }, function () {});
+        }, function (response) {});
       });
     }
     // else return

@@ -2,4 +2,10 @@
  * gridContent helpers
  */
 
-Template.searchGridContent.inheritsHelpersFrom("gridContent");
+Template.searchGridContent.helpers({
+  displayPrice: function () {
+    if (this.price && this.price.range) {
+      return this.price.range;
+    }
+  }
+});

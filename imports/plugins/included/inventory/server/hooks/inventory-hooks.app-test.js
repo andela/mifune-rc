@@ -1,43 +1,49 @@
 /* eslint dot-notation: 0 */
 import { Meteor } from "meteor/meteor";
-import { Inventory, Orders, Products }  from "/lib/collections";
-import { Reaction } from "/server/api";
+import { Inventory, Orders, Cart }  from "/lib/collections";
+import { Reaction, Logger } from "/server/api";
 import { expect } from "meteor/practicalmeteor:chai";
 import { sinon } from "meteor/practicalmeteor:sinon";
 import Fixtures from "/server/imports/fixtures";
-import { createCart } from "/server/imports/fixtures/cart";
-import { addProductSingleVariant } from "/server/imports/fixtures/products";
-import { registerInventory } from "../methods/inventory";
+import { getShop } from "/server/imports/fixtures/shops";
 
 Fixtures();
 
-
-function resetInventory() {
-  Inventory.remove({});
-  const products = Products.find().fetch();
-  for (const product of products) {
-    registerInventory(product);
-  }
+function reduceCart(cart) {
+  Cart.update(cart._id, {
+    $set: {
+      "items.0.quantity": 1
+    }
+  });
+  Cart.update(cart._id, {
+    $set: {
+      "items.1.quantity": 1
+    }
+  });
+  Cart.update(cart._id, {
+    $pull: {
+      "items.$.quantity": {$gt: 1}
+    }
+  });
 }
 
 describe("Inventory Hooks", function () {
-  this.timeout(50000);
   let originals;
   let sandbox;
-  let cart;
 
   before(function () {
     originals = {
-      copyCartToOrder: Meteor.server.method_handlers["cart/copyCartToOrder"]
+      mergeCart: Meteor.server.method_handlers["cart/mergeCart"],
+      createCart: Meteor.server.method_handlers["cart/createCart"],
+      copyCartToOrder: Meteor.server.method_handlers["cart/copyCartToOrder"],
+      addToCart: Meteor.server.method_handlers["cart/addToCart"],
+      setShipmentAddress: Meteor.server.method_handlers["cart/setShipmentAddress"],
+      setPaymentAddress: Meteor.server.method_handlers["cart/setPaymentAddress"]
     };
   });
 
   beforeEach(function () {
     sandbox = sinon.sandbox.create();
-    Products.direct.remove({});
-    const { product, variant } = addProductSingleVariant();
-    cart = createCart(product._id, variant._id);
-    resetInventory();
   });
 
   afterEach(function () {
@@ -55,20 +61,27 @@ describe("Inventory Hooks", function () {
   it("should move allocated inventory to 'sold' when an order is created", function () {
     sandbox.stub(Meteor.server.method_handlers, "orders/sendNotification", function () {
       check(arguments, [Match.Any]);
+      Logger.warn("running stub notification");
       return true;
     });
-    sandbox.stub(Reaction, "hasPermission", () => true);
+    Inventory.direct.remove({});
+    const cart = Factory.create("cartToOrder");
+    reduceCart(cart);
     sandbox.stub(Reaction, "getShopId", function () {
       return cart.shopId;
     });
+    const shop = getShop();
     const product = cart.items[0];
-    const inventoryItem = Inventory.findOne({
+    const inventoryItem = Inventory.insert({
       productId: product.productId,
       variantId: product.variants._id,
-      shopId: cart.shopId
+      shopId: shop._id,
+      workflow: {
+        status: "reserved"
+      },
+      orderItemId: product._id
     });
     expect(inventoryItem).to.not.be.undefined;
-    // because the cart fixture does not trigger hooks we need to allocate inventory manually
     Inventory.update(inventoryItem._id,
       {
         $set: {
@@ -81,38 +94,47 @@ describe("Inventory Hooks", function () {
     const updatedInventoryItem = Inventory.findOne({
       productId: product.productId,
       variantId: product.variants._id,
-      shopId: cart.shopId,
+      shopId: shop._id,
       orderItemId: product._id
     });
     expect(updatedInventoryItem.workflow.status).to.equal("sold");
   });
 
-  it("should move allocated inventory to 'shipped' when an order is shipped", function (done) {
+  it.skip("should move allocated inventory to 'shipped' when an order is shipped", function (done) {
+    this.timeout(5000);
     sandbox.stub(Meteor.server.method_handlers, "orders/sendNotification", function () {
       check(arguments, [Match.Any]);
+      Logger.warn("running stub notification");
       return true;
     });
     sandbox.stub(Reaction, "hasPermission", () => true);
+    Inventory.direct.remove({});
+    const cart = Factory.create("cartToOrder");
+    reduceCart(cart);
     sandbox.stub(Reaction, "getShopId", function () {
       return cart.shopId;
     });
-    const cartProduct = cart.items[0];
-    const inventoryItem = Inventory.findOne({
-      productId: cartProduct.productId,
-      variantId: cartProduct.variants._id,
-      shopId: cart.shopId
+    const shop = getShop();
+    const product = cart.items[0];
+    const inventoryItem = Inventory.insert({
+      productId: product.productId,
+      variantId: product.variants._id,
+      shopId: shop._id,
+      workflow: {
+        status: "reserved"
+      },
+      orderItemId: product._id
     });
     expect(inventoryItem).to.not.be.undefined;
-    // because the cart fixture does not trigger hooks we need to allocate inventory manuall
     Inventory.update(inventoryItem._id,
       {
         $set: {
           "workflow.status": "reserved",
-          "orderItemId": cartProduct._id
+          "orderItemId": product._id
         }
       });
     spyOnMethod("copyCartToOrder", cart.userId);
-    const orderId = Meteor.call("cart/copyCartToOrder", cart._id).result;
+    const orderId = Meteor.call("cart/copyCartToOrder", cart._id);
     const order = Orders.findOne(orderId);
     const shipping = { items: [] };
     Meteor.call("orders/shipmentShipped", order, shipping, () => {

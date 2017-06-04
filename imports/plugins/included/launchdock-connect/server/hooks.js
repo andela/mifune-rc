@@ -21,7 +21,7 @@ Hooks.Events.add("afterCreateDefaultAdminUser", (user) => {
       if (err) {
         Logger.error(err);
       } else {
-        Logger.debug("Updated default admin with Launchdock account info.");
+        Logger.info("Updated default admin with Launchdock account info.");
       }
     });
   }

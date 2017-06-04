@@ -8,7 +8,7 @@ MethodHooks.after("shop/createTag", function (options) {
     return options.error;
   }
   if (typeof options.result === "string") {
-    Logger.debug(`Created tag with _id: ${options.result}`);
+    Logger.info(`Created tag with _id: ${options.result}`);
   }
 
   return options.result;

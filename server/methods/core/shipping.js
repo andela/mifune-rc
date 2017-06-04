@@ -1,14 +1,13 @@
 import { Meteor } from "meteor/meteor";
 import { check } from "meteor/check";
-import { Cart } from "/lib/collections";
-import { Logger, Hooks } from "/server/api";
-import { Cart as CartSchema } from "/lib/collections/schemas";
+import { Cart, Shipping } from "/lib/collections";
+import { Logger, Reaction } from "/server/api";
 
 /*
  * Reaction Shipping Methods
  * methods typically used for checkout (shipping, taxes, etc)
  */
-export const methods = {
+Meteor.methods({
   /**
    * shipping/updateShipmentQuotes
    * @summary gets shipping rates and updates the users cart methods
@@ -17,20 +16,23 @@ export const methods = {
    * @return {undefined}
    */
   "shipping/updateShipmentQuotes": function (cartId) {
-    check(cartId, String);
     if (!cartId) {
       return [];
     }
+    check(cartId, String);
     this.unblock();
     const cart = Cart.findOne(cartId);
-    check(cart, CartSchema);
-
     if (cart) {
       const rates = Meteor.call("shipping/getShippingRates", cart);
+      // no rates found
+      if (!rates) {
+        return [];
+      }
       let selector;
       let update;
-      // temp hack until we build out multiple shipment handlers if we have an existing item update it, otherwise add to set.
-      if (cart.shipping) {
+      // temp hack until we build out multiple shipment handlers
+      // if we have an existing item update it, otherwise add to set.
+      if (cart.shipping && rates.length > 0) {
         selector = {
           "_id": cartId,
           "shipping._id": cart.shipping[0]._id
@@ -53,13 +55,15 @@ export const methods = {
         };
       }
       // add quotes to the cart
-      Cart.update(selector, update, function (error) {
-        if (error) {
-          Logger.warn(`Error adding rates to cart ${cartId}`, error);
-          return;
-        }
-        Logger.debug(`Success adding rates to cart ${cartId}`, rates);
-      });
+      if (rates.length > 0) {
+        Cart.update(selector, update, function (error) {
+          if (error) {
+            Logger.warn(`Error adding rates to cart ${cartId}`, error);
+            return;
+          }
+          Logger.debug(`Success adding rates to cart ${cartId}`, rates);
+        });
+      }
     }
   },
 
@@ -70,18 +74,59 @@ export const methods = {
    * @return {Array} return updated rates in cart
    */
   "shipping/getShippingRates": function (cart) {
-    check(cart, CartSchema);
+    check(cart, Object);
     const rates = [];
-    // must have items to calculate shipping
+    const shops = [];
+    const products = cart.items;
+    // default selector is current shop
+    let selector = {
+      shopId: Reaction.getShopId()
+    };
+    // must have products to calculate shipping
     if (!cart.items) {
-      return rates;
+      return [];
     }
-    // hooks for other shipping rate events
-    // all callbacks should return rates
-    Hooks.Events.run("onGetShippingRates", rates, cart);
-    Logger.debug("getShippingRates returning rates", rates);
+    // create an array of shops, allowing
+    // the cart to have products from multiple shops
+    for (const product of products) {
+      if (product.shopId) {
+        shops.push(product.shopId);
+      }
+    }
+    // if we have multiple shops in cart
+    if ((shops !== null ? shops.length : void 0) > 0) {
+      selector = {
+        shopId: {
+          $in: shops
+        }
+      };
+    }
+
+    const shippingMethods = Shipping.find(selector);
+
+    shippingMethods.forEach(function (shipping) {
+      const _results = [];
+      for (const method of shipping.methods) {
+        if (!(method.enabled === true)) {
+          continue;
+        }
+        if (!method.rate) {
+          method.rate = 0;
+        }
+        if (!method.handling) {
+          method.handling = 0;
+        }
+        const rate = method.rate + method.handling;
+        _results.push(rates.push({
+          carrier: shipping.provider.label,
+          method: method,
+          rate: rate,
+          shopId: shipping.shopId
+        }));
+      }
+      return _results;
+    });
+    Logger.debug("getShippingrates returning rates", rates);
     return rates;
   }
-};
-
-Meteor.methods(methods);
+});

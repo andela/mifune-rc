@@ -9,18 +9,21 @@ Reaction.registerPackage({
     name: "Email"
   },
   registry: [{
-    label: "Email Settings",
+    route: "/dashboard/email/status",
+    provides: "dashboard",
+    workflow: "coreEmailWorkflow",
+    name: "Email Status",
+    label: "Email",
     description: "Email settings",
     icon: "fa fa-envelope-o",
+    priority: 1,
+    container: "core",
+    template: "emailStatusPage"
+  }, {
+    label: "Email Settings",
     name: "email/settings",
     provides: "settings",
-    workflow: "coreEmailWorkflow",
-    template: "emailSettings",
-    meta: {
-      actionView: {
-        dashboardSize: "md"
-      }
-    }
+    template: "emailSettings"
   }],
   layout: [{
     layout: "coreLayout",
@@ -33,6 +36,7 @@ Reaction.registerPackage({
       layoutFooter: "",
       notFound: "notFound",
       dashboardHeader: "dashboardHeader",
+      // dashboardHeaderControls: "emailDashboardTabs", // removed until needed for nav
       dashboardControls: "dashboardControls",
       adminControlsFooter: "adminControlsFooter"
     }

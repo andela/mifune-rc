@@ -14,9 +14,7 @@ export const DEFAULT_WORKFLOW = "coreWorkflow";
 
 // Use this to override just the home Package
 // ie: {template: "products"}
-export const INDEX_OPTIONS = {
-  workflow: "coreProductGridWorkflow"
-};
+export const INDEX_OPTIONS = {};
 
 // default load qty for product grid
 export const ITEMS_INCREMENT = 24;
@@ -25,6 +23,3 @@ Session.setDefault("DEFAULT_LAYOUT", DEFAULT_LAYOUT);
 Session.setDefault("DEFAULT_WORKFLOW", DEFAULT_WORKFLOW);
 Session.setDefault("INDEX_OPTIONS", INDEX_OPTIONS);
 Session.setDefault("productScrollLimit", ITEMS_INCREMENT);
-
-// autoform default template
-AutoForm.setDefaultTemplate("bootstrap3");

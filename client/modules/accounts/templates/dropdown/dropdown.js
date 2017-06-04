@@ -61,27 +61,11 @@ Template.loginDropdown.events({
           });
         }
       });
-    } else if (this.name !== "account/profile") {
-      event.preventDefault();
-      /** TMP **/
-      Reaction.showActionView(this);
     } else if (this.route || this.name) {
+      event.preventDefault();
       const route = this.name || this.route;
       Reaction.Router.go(route);
     }
     template.$(".dropdown-toggle").dropdown("toggle");
-  }
-});
-
-Template.accountsDropdownApps.helpers({
-  reactionAppsOptions() {
-    // get shortcuts with audience permissions based on user roles
-    const roles = Roles.getRolesForUser(Meteor.userId(), Reaction.getShopId());
-
-    return {
-      provides: "shortcut",
-      enabled: true,
-      audience: roles
-    };
   }
 });

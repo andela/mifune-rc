@@ -35,7 +35,6 @@ Reaction.registerPackage({
     }]
   }, {
     label: "Analytics Settings",
-    icon: "fa fa-bar-chart-o",
     route: "/dashboard/analytics/settings",
     provides: "settings",
     container: "dashboard",

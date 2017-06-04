@@ -46,7 +46,6 @@ class DropDownMenu extends Component {
     return (
       <Popover
         buttonElement={
-          this.props.buttonElement ||
           <Button
             icon="fa fa-chevron-down"
             iconAfter={true}
@@ -63,7 +62,6 @@ class DropDownMenu extends Component {
 }
 
 DropDownMenu.propTypes = {
-  buttonElement: PropTypes.node,
   children: PropTypes.node,
   isEnabled: PropTypes.bool,
   onChange: PropTypes.func,

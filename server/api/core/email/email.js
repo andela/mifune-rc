@@ -1,7 +1,7 @@
 import { Meteor } from "meteor/meteor";
 import { Job } from "meteor/vsivsi:job-collection";
 import { Jobs, Templates } from "/lib/collections";
-import { Reaction, Logger } from "/server/api";
+import { Logger } from "/server/api";
 
 
 /**
@@ -20,35 +20,6 @@ export function send(options) {
 
 
 /**
- * Reaction.Email.getSubject() - Returns a subject source for SSR consumption
- * layout must be defined + template
- * @param {String} template name of the template in either Layouts or fs
- * @returns {Object} returns source
- */
-export function getSubject(template) {
-  if (typeof template !== "string") {
-    const msg = "Reaction.Email.getSubject() requires a template name";
-    Logger.error(msg);
-    throw new Meteor.Error("no-template-name", msg);
-  }
-
-  // set default
-  const language = Reaction.getShopLanguage();
-
-  // check database for a matching template
-  const tmpl = Templates.findOne({
-    name: template,
-    language
-  });
-
-  // use that template if found
-  if (tmpl && tmpl.template) {
-    return tmpl.subject;
-  }
-  return "A message from {{shop.name}}";
-}
-
-/**
  * Reaction.Email.getTemplate() - Returns a template source for SSR consumption
  * layout must be defined + template
  * @param {String} template name of the template in either Layouts or fs
@@ -62,37 +33,28 @@ export function getTemplate(template) {
   }
 
   // set default
-  const language = Reaction.getShopLanguage();
+  let language = "en";
+
+  const shopLocale = Meteor.call("shop/getLocale");
+
+  // set the language if found
+  if (shopLocale && shopLocale.locale && shopLocale.locale.languages) {
+    language = shopLocale.locale.languages;
+  }
 
   // check database for a matching template
-  const tmpl = Templates.findOne({
-    name: template,
-    language
-  });
+  const tmpl = Templates.findOne({ template, language });
 
   // use that template if found
-  if (tmpl && tmpl.template) {
-    return tmpl.template;
+  if (tmpl && tmpl.source) {
+    return tmpl.source;
   }
 
   // otherwise, use the default template from the filesystem
-  return getTemplateFile(template);
-}
-
-/**
- * Reaction.Email.getTemplateFile
- * @param  {String} file name of the template on file system
- * @return {String} returns source
- */
-export function getTemplateFile(file) {
-  if (typeof file !== "string") {
-    const msg = "Reaction.Email.getTemplateFile() requires a template name";
-    Logger.error(msg);
-    throw new Meteor.Error("no-template-name", msg);
-  }
+  const file = `email/templates/${template}.html`;
 
   try {
-    return Assets.getText(`email/templates/${file}.html`);
+    return Assets.getText(file);
   } catch (e) {
     Logger.warn(`Template not found: ${file}. Falling back to coreDefault.html`);
     return Assets.getText("email/templates/coreDefault.html");

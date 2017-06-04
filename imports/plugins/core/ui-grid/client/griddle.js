@@ -15,13 +15,12 @@ const MeteorGriddle = React.createClass({
     filteredFields: React.PropTypes.array, // an array of fields to search through when filtering
     matchingResultsCount: React.PropTypes.string, // the name of the matching results counter
     publication: React.PropTypes.string, // the publication that will provide the data
-    subsManager: React.PropTypes.object, // subsManager sub
-    transform: React.PropTypes.func // external function to filter result source
+    subsManager: React.PropTypes.object
   },
   mixins: [ReactMeteorData],
 
   getDefaultProps() {
-    return { useExternal: false, externalFilterDebounceWait: 300, externalResultsPerPage: 10, query: {} };
+    return {useExternal: false, externalFilterDebounceWait: 300, externalResultsPerPage: 10};
   },
 
   getInitialState() {
@@ -37,7 +36,7 @@ const MeteorGriddle = React.createClass({
 
   componentWillMount() {
     this.applyQuery = _.debounce((query) => {
-      this.setState({ query });
+      this.setState({query});
     }, this.props.externalFilterDebounceWait);
   },
 
@@ -74,11 +73,7 @@ const MeteorGriddle = React.createClass({
       }, options));
     }
 
-    // optional transform of collection for grid results
-    let results = this.props.collection.find(this.state.query, options).fetch();
-    if (this.props.transform) {
-      results = this.props.transform(results);
-    }
+    const results = this.props.collection.find(this.state.query, options).fetch();
 
     return {
       loading: !pubHandle.ready(),
@@ -88,17 +83,17 @@ const MeteorGriddle = React.createClass({
   },
 
   resetQuery() {
-    this.setState({ query: {} });
+    this.setState({query: {}});
   },
 
   // what page is currently viewed
   setPage(index) {
-    this.setState({ currentPage: index });
+    this.setState({currentPage: index});
   },
 
   // this changes whether data is sorted in ascending or descending order
   changeSort(sort, sortAscending) {
-    this.setState({ externalSortColumn: sort, externalSortAscending: sortAscending });
+    this.setState({externalSortColumn: sort, externalSortAscending: sortAscending});
   },
 
   setFilter(filter) {
@@ -112,7 +107,7 @@ const MeteorGriddle = React.createClass({
         };
         return filterItem;
       });
-      this.applyQuery({ $or: orArray });
+      this.applyQuery({$or: orArray});
     } else {
       this.resetQuery();
     }
@@ -120,7 +115,7 @@ const MeteorGriddle = React.createClass({
 
   // this method handles determining the page size
   setPageSize(size) {
-    this.setState({ externalResultsPerPage: size });
+    this.setState({externalResultsPerPage: size});
   },
 
   render() {

@@ -48,10 +48,6 @@ Template.products.onCreated(function () {
     canLoadMoreProducts: false
   });
 
-  // We're not ready to serve prerendered page until products have loaded
-  window.prerenderReady = false;
-
-
   // Update product subscription
   this.autorun(() => {
     const slug = Reaction.Router.getParam("slug");
@@ -60,7 +56,7 @@ Template.products.onCreated(function () {
     let tags = {}; // this could be shop default implementation needed
 
     if (tag) {
-      tags = { tags: [tag._id] };
+      tags = {tags: [tag._id]};
     }
 
     // if we get an invalid slug, don't return all products
@@ -75,19 +71,15 @@ Template.products.onCreated(function () {
     this.state.set("slug", slug);
 
     const queryParams = Object.assign({}, tags, Reaction.Router.current().queryParams);
-    const productsSubscription = this.subscribe("Products", scrollLimit, queryParams);
-
-    // Once our products subscription is ready, we are ready to render
-    if (productsSubscription.ready()) {
-      window.prerenderReady = true;
-    }
+    this.subscribe("Products", scrollLimit, queryParams);
 
     // we are caching `currentTag` or if we are not inside tag route, we will
     // use shop name as `base` name for `positions` object
     const currentTag = ReactionProduct.getTag();
     const productCursor = Products.find({
-      ancestors: [],
-      type: { $in: ["simple"] }
+      ancestors: []
+      // keep this, as an example
+      // type: { $in: ["simple"] }
     }, {
       sort: {
         [`positions.${currentTag}.position`]: 1,
@@ -100,11 +92,8 @@ Template.products.onCreated(function () {
       return applyProductRevision(product);
     });
 
-    const sortedProducts = ReactionProduct.sortProducts(products, currentTag);
-
     this.state.set("canLoadMoreProducts", productCursor.count() >= Session.get("productScrollLimit"));
-    this.products.set(sortedProducts);
-    Session.set("productGrid/products", sortedProducts);
+    this.products.set(products);
   });
 
   this.autorun(() => {
