@@ -16,13 +16,13 @@ Cart.after.update((userId, cart, fieldNames, modifier) => {
   // if we're adding a new product or variant to the cart
   if (modifier.$addToSet) {
     if (modifier.$addToSet.items) {
-      Logger.debug("after cart update, call inventory/addReserve");
+      Logger.info("after cart update, call inventory/addReserve");
       Meteor.call("inventory/addReserve", cart.items);
     }
   }
   // or we're adding more quantity
   if (modifier.$inc) {
-    Logger.debug("after variant increment, call inventory/addReserve");
+    Logger.info("after variant increment, call inventory/addReserve");
     Meteor.call("inventory/addReserve", cart.items);
   }
 });
@@ -34,7 +34,7 @@ Cart.before.update((userId, cart, fieldNames, modifier) => {
   // removing  cart items, clear inventory reserve
   if (modifier.$pull) {
     if (modifier.$pull.items) {
-      Logger.debug("remove cart items, call inventory/clearReserve");
+      Logger.info("remove cart items, call inventory/clearReserve");
       Meteor.call("inventory/clearReserve", cart.items);
     }
   }
@@ -51,7 +51,7 @@ Products.after.remove((userId, doc) => {
       variantId: doc._id,
       shopId: doc.shopId
     };
-    Logger.debug(`remove inventory variants for variant: ${doc._id
+    Logger.info(`remove inventory variants for variant: ${doc._id
       }, call inventory/remove`);
     Meteor.call("inventory/remove", variantItem);
   }
@@ -88,6 +88,7 @@ Products.after.insert((userId, doc) => {
   if (doc.type !== "variant") {
     return false;
   }
+  // Meteor.call("inventory/register", doc);
   registerInventory(doc);
 });
 
@@ -97,7 +98,7 @@ function markInventoryShipped(doc) {
   const cartItems = [];
   for (const orderItem of orderItems) {
     const cartItem = {
-      _id: orderItem.cartItemId || orderItem._id,
+      _id: orderItem.cartItemId,
       shopId: orderItem.shopId,
       quantity: orderItem.quantity,
       productId: orderItem.productId,
@@ -112,10 +113,9 @@ function markInventoryShipped(doc) {
 function markInventorySold(doc) {
   const orderItems = doc.items;
   const cartItems = [];
-  // If a cartItemId exists it's a legacy order and we use that
   for (const orderItem of orderItems) {
     const cartItem = {
-      _id: orderItem.cartItemId || orderItem._id,
+      _id: orderItem.cartItemId,
       shopId: orderItem.shopId,
       quantity: orderItem.quantity,
       productId: orderItem.productId,

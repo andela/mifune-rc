@@ -21,9 +21,7 @@ const ToolbarGroup = (props) => {
 
 ToolbarGroup.propTypes = {
   children: PropTypes.node,
-  className: PropTypes.oneOfType([PropTypes.object, PropTypes.string]),
-  firstChild: PropTypes.bool,
-  lastChild: PropTypes.bool
+  className: PropTypes.oneOfType([PropTypes.object, PropTypes.string])
 };
 
 export default ToolbarGroup;

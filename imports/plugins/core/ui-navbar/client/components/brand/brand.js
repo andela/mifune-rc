@@ -1,4 +1,4 @@
-import { Reaction, Router } from "/client/api";
+import { Reaction } from "/client/api";
 import { Media, Shops } from "/lib/collections";
 
 Template.coreNavigationBrand.helpers({
@@ -11,12 +11,5 @@ Template.coreNavigationBrand.helpers({
     }
 
     return false;
-  }
-});
-
-Template.coreNavigationBrand.events({
-  "click a.brand"(event) {
-    event.preventDefault();
-    Router.go("/");
   }
 });

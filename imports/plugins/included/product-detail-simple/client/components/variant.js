@@ -1,4 +1,4 @@
-import React, { Component, PropTypes } from "react";
+import React, { Component, PropTypes} from "react";
 import classnames from "classnames";
 import { Currency, Translation } from "/imports/plugins/core/ui/client/components";
 import { SortableItem } from "/imports/plugins/core/ui/client/containers";
@@ -21,29 +21,11 @@ class Variant extends Component {
       inventoryPolicy
     } = this.props.variant;
 
-    // If variant is sold out, show Sold Out badge
     if (inventoryManagement && this.props.soldOut) {
       if (inventoryPolicy) {
         return (
-          <span className="variant-qty-sold-out badge badge-danger">
-            <Translation defaultValue="Sold Out!" i18nKey="productDetail.soldOut" />
-          </span>
-        );
-      }
-
-      return (
-        <span className="variant-qty-sold-out badge badge-info">
-          <Translation defaultValue="Backorder" i18nKey="productDetail.backOrder" />
-        </span>
-      );
-    }
-
-    // If Warning Threshold is met, show Limited Supply Badge
-    if (inventoryManagement && this.props.variant.lowInventoryWarningThreshold >= this.props.variant.inventoryTotal) {
-      if (inventoryPolicy) {
-        return (
           <span className="variant-qty-sold-out badge badge-warning">
-            <Translation defaultValue="Limited Supply" i18nKey="productDetail.limitedSupply" />
+            <Translation defaultValue="Sold Out!" i18nKey="productDetail.soldOut" />
           </span>
         );
       }
@@ -78,18 +60,6 @@ class Variant extends Component {
       "variant-deleted": this.props.variant.isDeleted
     });
 
-    let variantTitleElement;
-
-    if (typeof variant.title === "string" && variant.title.length) {
-      variantTitleElement = (
-        <span className="variant-title">{variant.title}</span>
-      );
-    } else {
-      variantTitleElement = (
-        <Translation defaultValue="Label" i18nKey="productVariant.title" />
-      );
-    }
-
     const variantElement = (
       <li
         className="variant-list-item"
@@ -99,12 +69,12 @@ class Variant extends Component {
       >
         <div className={classes}>
           <div className="title">
-            {variantTitleElement}
+            <span className="variant-title">{variant.title}</span>
           </div>
 
           <div className="actions">
             <span className="variant-price">
-              <Currency amount={this.price} editable={this.props.editable}/>
+              <Currency amount={this.price}/>
             </span>
           </div>
 

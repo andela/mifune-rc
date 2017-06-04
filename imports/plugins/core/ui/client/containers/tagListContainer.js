@@ -3,7 +3,7 @@ import debounce from "lodash/debounce";
 import update from "react/lib/update";
 import { Meteor } from "meteor/meteor";
 import { Reaction, i18next } from "/client/api";
-import { composeWithTracker } from "/lib/api/compose";
+import { composeWithTracker } from "react-komposer";
 import { TagList } from "../components/tags";
 import { Tags } from "/lib/collections";
 import { getTagIds } from "/lib/selectors/tags";
@@ -250,7 +250,7 @@ function composer(props, onData) {
   let isEditable = props.editable;
 
   if (typeof isEditable !== "boolean") {
-    isEditable = Reaction.hasPermission(props.permissions);
+    isEditable = Reaction.hasPermission(props.premissions);
   }
 
   const tagsByKey = {};

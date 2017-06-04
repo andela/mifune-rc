@@ -1,3 +1,2 @@
-import "./hooks";
+import "./startup";
 import "./methods";
-import "./i18n";

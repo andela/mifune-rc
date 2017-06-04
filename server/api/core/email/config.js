@@ -65,7 +65,7 @@ export function getMailUrl() {
 
 /**
  * getMailConfig - get the email sending config for Nodemailer
- * @return {{host: String, port: Number, secure: Boolean, auth: Object, logger: Boolean}} returns a config object
+ * @return {Object} returns a config object
  */
 export function getMailConfig() {
   const processUrl = process.env.MAIL_URL;
@@ -87,8 +87,7 @@ export function getMailConfig() {
     return {
       host: parsedUrl.hostname,
       port: parsedUrl.port,
-      // since the port is casted to number above
-      secure: parsedUrl.port === 465,
+      secure: parsedUrl.port === "465" || parsedUrl.port === "587",
       auth: {
         user: creds[0],
         pass: creds[1]
@@ -135,7 +134,7 @@ export function getMailConfig() {
     return {
       host,
       port,
-      secure: port === 465,
+      secure: port === 465 || port === 587,
       auth: { user, pass: password },
       logger: process.env.EMAIL_DEBUG === "true"
     };

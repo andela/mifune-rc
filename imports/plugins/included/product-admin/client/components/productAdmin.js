@@ -1,125 +1,20 @@
-import { isEqual } from "lodash";
 import React, { Component, PropTypes } from "react";
-import Velocity from "velocity-animate";
-import "velocity-animate/velocity.ui";
 import {
+  Button,
   Card,
   CardHeader,
   CardBody,
   CardGroup,
+  Divider,
   Metadata,
   TextField,
-  Translation,
-  Select
+  Translation
 } from "/imports/plugins/core/ui/client/components";
 import { Router } from "/client/api";
+import { PublishContainer } from "/imports/plugins/core/revisions";
 import { TagListContainer } from "/imports/plugins/core/ui/client/containers";
-import update from "react/lib/update";
-
-const fieldNames = [
-  "title",
-  "handle",
-  "subtitle",
-  "vendor",
-  "description",
-  "origincountry",
-  "facebookMsg",
-  "twitterMsg",
-  "pinterestMsg",
-  "googleplusMsg"
-];
-
-const fieldGroups = {
-  title: { group: "productDetails" },
-  handle: { group: "productDetails" },
-  pageTitle: { group: "productDetails" },
-  vendor: { group: "productDetails" },
-  description: { group: "productDetails" },
-  facebookMsg: { group: "social" },
-  twitterMsg: { group: "social" },
-  pinterestMsg: { group: "social" },
-  googleplusMsg: { group: "social" },
-  hashtags: { group: "hashtags" },
-  metafields: { group: "metafields" }
-};
 
 class ProductAdmin extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      expandedCard: this.fieldGroupForFieldName(props.editFocus),
-      product: props.product,
-      viewProps: props.viewProps
-    };
-  }
-
-  componentWillReceiveProps(nextProps) {
-    const nextProduct = nextProps.product || {};
-    const currentProduct = this.props.product || {};
-
-    if (!isEqual(nextProduct, currentProduct)) {
-      for (const fieldName of fieldNames) {
-        if (nextProduct[fieldName] !== currentProduct[fieldName]) {
-          this.animateFieldFlash(fieldName);
-        }
-      }
-    }
-
-    const cardGroupName = this.fieldGroupForFieldName(nextProps.editFocus);
-
-    this.setState({
-      expandedCard: cardGroupName,
-      viewProps: nextProps.viewProps
-    });
-
-    this.setState({
-      product: nextProps.product
-    });
-  }
-
-  fieldGroupForFieldName(field) {
-    // Other wise, if a field was passed
-    // const fieldName = this.state.viewProps.field;
-
-    let fieldName;
-
-    // If the field is an array of field name
-    if (Array.isArray(field) && field.length) {
-      // Use the first field name
-      fieldName = field[0];
-    } else {
-      fieldName = field;
-    }
-
-    const fieldData = fieldGroups[fieldName];
-
-    if (fieldData && fieldData.group) {
-      return fieldData.group;
-    }
-
-    return fieldName;
-  }
-
-  animateFieldFlash(fieldName) {
-    const fieldRef = this.refs[`${fieldName}Input`];
-
-    if (fieldRef) {
-      const input = fieldRef.refs.input;
-
-      Velocity.RunSequence([
-        { e: input, p: { backgroundColor: "#e2f2e2" }, o: { duration: 200 } },
-        { e: input, p: { backgroundColor: "#fff" }, o: { duration: 100 } }
-      ]);
-    }
-  }
-
-  handleCardExpand(cardName) {
-    if (this.props.onCardExpand) {
-      this.props.onCardExpand(cardName);
-    }
-  }
-
   handleDeleteProduct = () => {
     if (this.props.onDeleteProduct) {
       this.props.onDeleteProduct(this.props.product);
@@ -134,24 +29,8 @@ class ProductAdmin extends Component {
 
 
   handleFieldChange = (event, value, field) => {
-    const newState = update(this.state, {
-      product: {
-        $merge: {
-          [field]: value
-        }
-      }
-    });
-
-    this.setState(newState, () => {
-      if (this.props.onFieldChange) {
-        this.props.onFieldChange(field, value);
-      }
-    });
-  }
-
-  handleSelectChange = (value, field) => {
-    if (this.props.onProductFieldSave) {
-      this.props.onProductFieldSave(this.product._id, field, value);
+    if (this.props.onFieldChange) {
+      this.props.onFieldChange(field, value);
     }
   }
 
@@ -186,7 +65,7 @@ class ProductAdmin extends Component {
   }
 
   get product() {
-    return this.state.product || this.props.product || {};
+    return this.props.product || {};
   }
 
   get permalink() {
@@ -213,49 +92,24 @@ class ProductAdmin extends Component {
     );
   }
 
-  isExpanded(groupName) {
-    if (this.state.expandedCard && this.state.expandedCard === groupName) {
-      return true;
-    }
-
-    return false;
-  }
-
   render() {
     return (
       <CardGroup>
-        <Card
-          expanded={this.isExpanded("productDetails")}
-          onExpand={this.handleCardExpand.bind(this, "productDetails")}
-        >
+        <Card>
           <CardHeader
-            actAsExpander={true}
             i18nKeyTitle="productDetailEdit.productSettings"
             title="Product Settings"
-            onChange={this.handleFieldChange}
           />
-          <CardBody expandable={true}>
-            <Select
-              clearable={false}
-              i18nKeyLabel="productDetailEdit.template"
-              i18nKeyPlaceholder="productDetailEdit.templateSelectPlaceholder"
-              label="Template"
-              name="template"
-              onChange={this.handleSelectChange}
-              options={this.props.templates}
-              placeholder="Select a template"
-              value={this.product.template}
-            />
+          <CardBody>
             <TextField
               i18nKeyLabel="productDetailEdit.title"
               i18nKeyPlaceholder="productDetailEdit.title"
               label="Title"
+              multiline={true}
               name="title"
               onBlur={this.handleFieldBlur}
               onChange={this.handleFieldChange}
-              onReturnKeyDown={this.handleFieldBlur}
               placeholder="Title"
-              ref="titleInput"
               value={this.product.title}
             />
             <TextField
@@ -266,33 +120,29 @@ class ProductAdmin extends Component {
               name="handle"
               onBlur={this.handleFieldBlur}
               onChange={this.handleFieldChange}
-              onReturnKeyDown={this.handleFieldBlur}
               placeholder="Permalink"
-              ref="handleInput"
               value={this.product.handle}
             />
             <TextField
               i18nKeyLabel="productDetailEdit.pageTitle"
               i18nKeyPlaceholder="productDetailEdit.pageTitle"
               label="Subtitle"
+              multiline={true}
               name="pageTitle"
               onBlur={this.handleFieldBlur}
               onChange={this.handleFieldChange}
-              onReturnKeyDown={this.handleFieldBlur}
               placeholder="Subtitle"
-              ref="subtitleInput"
               value={this.product.pageTitle}
             />
             <TextField
               i18nKeyLabel="productDetailEdit.vendor"
               i18nKeyPlaceholder="productDetailEdit.vendor"
               label="Vendor"
+              multiline={true}
               name="vendor"
               onBlur={this.handleFieldBlur}
               onChange={this.handleFieldChange}
-              onReturnKeyDown={this.handleFieldBlur}
               placeholder="Vendor"
-              ref="vendorInput"
               value={this.product.vendor}
             />
             <TextField
@@ -304,33 +154,16 @@ class ProductAdmin extends Component {
               onBlur={this.handleFieldBlur}
               onChange={this.handleFieldChange}
               placeholder="Description"
-              ref="descriptionInput"
               value={this.product.description}
-            />
-            <Select
-              clearable={false}
-              i18nKeyLabel="productDetailEdit.originCountry"
-              i18nKeyPlaceholder="productDetailEdit.originCountry"
-              label="Origin Country"
-              name="originCountry"
-              onChange={this.handleSelectChange}
-              placeholder="Select a Country"
-              ref="countryOfOriginInput"
-              value={this.product.originCountry}
-              options={this.props.countries}
             />
           </CardBody>
         </Card>
-        <Card
-          expanded={this.isExpanded("social")}
-          onExpand={this.handleCardExpand.bind(this, "social")}
-        >
+        <Card>
           <CardHeader
-            actAsExpander={true}
             i18nKeyTitle="social.socialTitle"
             title="Social"
           />
-          <CardBody expandable={true}>
+          <CardBody>
             <TextField
               i18nKeyLabel="productDetailEdit.facebookMsg"
               label="Facebook Message"
@@ -338,7 +171,6 @@ class ProductAdmin extends Component {
               name="facebookMsg"
               onBlur={this.handleFieldBlur}
               onChange={this.handleFieldChange}
-              ref="facebookMsgInput"
               value={this.product.facebookMsg}
             />
             <TextField
@@ -348,7 +180,6 @@ class ProductAdmin extends Component {
               name="twitterMsg"
               onBlur={this.handleFieldBlur}
               onChange={this.handleFieldChange}
-              ref="twitterMsgInput"
               value={this.product.twitterMsg}
             />
             <TextField
@@ -358,7 +189,6 @@ class ProductAdmin extends Component {
               name="pinterestMsg"
               onBlur={this.handleFieldBlur}
               onChange={this.handleFieldChange}
-              ref="pinterestMsgInput"
               value={this.product.pinterestMsg}
             />
             <TextField
@@ -368,22 +198,17 @@ class ProductAdmin extends Component {
               name="googleplusMsg"
               onBlur={this.handleFieldBlur}
               onChange={this.handleFieldChange}
-              ref="googleplusMsgInput"
               value={this.product.googleplusMsg}
             />
           </CardBody>
         </Card>
 
-        <Card
-          expanded={this.isExpanded("hashtags")}
-          onExpand={this.handleCardExpand.bind(this, "hashtags")}
-        >
+        <Card>
           <CardHeader
-            actAsExpander={true}
-            i18nKeyTitle="productDetail.tags"
+            i18nKeyTitle="productDetailEdit.tags"
             title="Tags"
           />
-          <CardBody expandable={true}>
+          <CardBody>
             <TagListContainer
               enableNewTagForm={true}
               product={this.product}
@@ -394,16 +219,12 @@ class ProductAdmin extends Component {
           </CardBody>
         </Card>
 
-        <Card
-          expanded={this.isExpanded("metafields")}
-          onExpand={this.handleCardExpand.bind(this, "metafields")}
-        >
+        <Card>
           <CardHeader
-            actAsExpander={true}
             i18nKeyTitle="productDetailEdit.details"
             title="Details"
           />
-          <CardBody expandable={true}>
+          <CardBody>
             <Metadata
               metafields={this.product.metafields}
               newMetafield={this.props.newMetafield}
@@ -419,13 +240,10 @@ class ProductAdmin extends Component {
 }
 
 ProductAdmin.propTypes = {
-  countries: PropTypes.arrayOf(PropTypes.object),
-  editFocus: PropTypes.oneOfType([PropTypes.string, PropTypes.arrayOf(PropTypes.string)]),
   handleFieldBlur: PropTypes.func,
   handleFieldChange: PropTypes.func,
   handleProductFieldChange: PropTypes.func,
   newMetafield: PropTypes.object,
-  onCardExpand: PropTypes.func,
   onDeleteProduct: PropTypes.func,
   onFieldChange: PropTypes.func,
   onMetaChange: PropTypes.func,
@@ -434,12 +252,7 @@ ProductAdmin.propTypes = {
   onProductFieldSave: PropTypes.func,
   onRestoreProduct: PropTypes.func,
   product: PropTypes.object,
-  revisonDocumentIds: PropTypes.arrayOf(PropTypes.string),
-  templates: PropTypes.arrayOf(PropTypes.shape({
-    label: PropTypes.string,
-    value: PropTypes.any
-  })),
-  viewProps: PropTypes.object
+  revisonDocumentIds: PropTypes.arrayOf(PropTypes.string)
 };
 
 export default ProductAdmin;

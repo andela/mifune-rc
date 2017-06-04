@@ -1,4 +1,7 @@
-import React, { Component, PropTypes } from "react";
+import React, { Children, Component, PropTypes } from "react";
+import TetherComponent from "react-tether";
+import classnames from "classnames";
+
 
 class Toolbar extends Component {
   render() {
@@ -12,7 +15,7 @@ class Toolbar extends Component {
 
 Toolbar.propTypes = {
   attachment: PropTypes.string,
-  children: PropTypes.node
+  children: PropTypes.node,
 };
 
 Toolbar.defaultProps = {

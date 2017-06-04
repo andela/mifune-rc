@@ -1,4 +1,5 @@
 .cart-icon {
+  .margin-left(2px);
   color: @cart-icon-text;
   border: @cart-icon-border;
   padding: @cart-icon-padding;
@@ -16,6 +17,7 @@
     background-color: lighten(@cart-icon-bg, 2%);
   }
 
+
   .badge {
     position: absolute;
     bottom: 4px;
@@ -30,20 +32,16 @@
     padding:2px 8px 2px 8px;
     background-color: @cart-icon-badge-warning;
   }
-
-  @media screen and (max-width: @screen-xs-max) {
-    padding: 10px;
-  }
 }
 .cart-alert{
   .float(right);
-  position: fixed;
+  position: absolute;
   top: 0;
   .right(76px);
   color: @cart-icon-text;
   background-color: @cart-icon-bg;
   display: none;
-  z-index: @zindex-modal + 1;
+  z-index: 99;
   box-shadow: 0 5px 5px -5px @dropdown-border;
   .cart-alert-text {
     padding: @navbar-padding-vertical;

@@ -1,5 +1,11 @@
 import React, { Component, PropTypes } from "react";
-import { Translation } from "/imports/plugins/core/ui/client/components";
+import {
+  Card,
+  CardHeader,
+  CardBody,
+  Checkbox
+} from "/imports/plugins/core/ui/client/components";
+import _set from "lodash/set";
 
 
 class RevisionControlSettings extends Component {
@@ -7,29 +13,31 @@ class RevisionControlSettings extends Component {
     return this.props.settings;
   }
 
-  render() {
-    let message;
-
-    if (this.settings.general.enabled) {
-      message = (
-        <Translation
-          defaultValue="Revision controls is enabled"
-          i18nKey="revisions.isEnabled"
-        />
-      );
-    } else {
-      message = (
-        <Translation
-          defaultValue="Revision controls is disabled"
-          i18nKey="revisions.isDisabled"
-        />
-    );
+  handleChange = (event, value, fieldName) => {
+    if (this.props.onUpdateSettings) {
+      const settingsCopy = Object.assign({}, this.props.settings);
+      _set(settingsCopy, fieldName, value);
+      this.props.onUpdateSettings(settingsCopy);
     }
+  }
 
+  render() {
     return (
-      <div className="rui publish-controls">
-        <p className="help-text">{message}</p>
-      </div>
+      <Card className="rui publish-controls">
+        <CardHeader
+          i18nKeyTitle="revisions.general"
+          title="General"
+        />
+        <CardBody>
+          <Checkbox
+            checked={this.settings.general.enabled}
+            i18nKeyLabel="revisions.enableRevisionControl"
+            label="Enable revision control"
+            name="general.enabled"
+            onChange={this.handleChange}
+          />
+        </CardBody>
+      </Card>
     );
   }
 }

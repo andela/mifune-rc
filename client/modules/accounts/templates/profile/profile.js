@@ -1,7 +1,6 @@
+import * as Collections from "/lib/collections";
 import { Meteor } from "meteor/meteor";
 import { Template } from "meteor/templating";
-import { Reaction } from "/client/api";
-import * as Collections from "/lib/collections";
 
 /**
  * onCreated: Account Profile View
@@ -14,8 +13,6 @@ Template.accountProfile.onCreated(() => {
   Meteor.call("accounts/currentUserHasPassword", (error, result) => {
     template.userHasPassword.set(result);
   });
-  // hide actionView if open, doesn't relate to profile page
-  Reaction.hideActionView();
 });
 
 /**

@@ -2,7 +2,7 @@ import React, { Component, PropTypes, Children } from "react"; // eslint-disable
 import { DragDropManager } from "dnd-core";
 import HTML5Backend from "react-dnd-html5-backend";
 
-const defaultManager = new DragDropManager(HTML5Backend);
+let defaultManager = new DragDropManager(HTML5Backend);
 
 // /**
 //  * This is singleton used to initialize only once dnd in our app.

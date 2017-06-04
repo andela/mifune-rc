@@ -71,13 +71,13 @@ export function loadSettings(json) {
               }, {
                 $set: settings
               });
-              Logger.debug("service configuration loaded: " +
+              Logger.info("service configuration loaded: " +
                 item.name + " | " + service);
             }
           }
         }
       }
-      Logger.debug(`loaded local package data: ${item.name}`);
+      Logger.info(`loaded local package data: ${item.name}`);
     }
   }
 }

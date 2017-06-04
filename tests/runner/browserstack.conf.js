@@ -40,11 +40,11 @@ exports.config = {
   },
 
   // Code to start browserstack local before start of test
-  onPrepare: function (config, capabilities) { // eslint-disable-line no-unused-vars
+  onPrepare: function (config, capabilities) {
     // console.log("Connecting local");
     return new Promise(function (resolve, reject) {
       exports.bsLocal = new browserstack.Local();
-      exports.bsLocal.start({ key: exports.config.key }, function (error) {
+      exports.bsLocal.start({"key": exports.config.key }, function (error) {
         if (error) return reject(error);
         // console.log("Connected. Now testing...");
         resolve();
@@ -53,7 +53,7 @@ exports.config = {
   },
 
   // Code to stop browserstack local after end of test
-  onComplete: function (capabilties, specs) { // eslint-disable-line no-unused-vars
+  onComplete: function (capabilties, specs) {
     try {
       exports.bs_local.stop(function () {});
     } catch (e) {

@@ -1,4 +1,4 @@
-/* eslint-disable */
+/* eslint no-cond-assign: 1 */
 //
 // TODO pinterest social templates need review to ensure proper use of reaction layouts
 //

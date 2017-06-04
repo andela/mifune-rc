@@ -8,8 +8,7 @@ import { Reaction } from "/server/api";
  * If no session is loaded, creates a new one
  */
 
-export const ServerSessions = new Mongo.Collection("Sessions");
-this.ServerSessions = ServerSessions;
+this.ServerSessions = new Mongo.Collection("Sessions");
 
 Meteor.publish("Sessions", function (sessionId) {
   check(sessionId, Match.OneOf(String, null));

@@ -1,13 +1,10 @@
-import * as tz from "moment-timezone";
-import moment from "moment";
-import "moment/min/locales.min.js";
-import { Meteor } from "meteor/meteor";
-import { Template } from "meteor/templating";
 import { i18next } from "/client/api";
 import { Reaction } from "../";
 import * as Collections from "/lib/collections";
 import * as Schemas from "/lib/collections/schemas";
-import { toCamelCase } from "/lib/api";
+import { Meteor } from "meteor/meteor";
+import { Template } from "meteor/templating";
+import moment from "moment-timezone";
 
 /*
  *
@@ -51,46 +48,22 @@ if (Package.blaze) {
  * @summary formats moment.js months into an array for autoform selector
  * @return {Array} returns array of months [value:, label:]
  */
-Template.registerHelper("monthOptions", function (showDefaultOption = true) {
+Template.registerHelper("monthOptions", function () {
   const label = i18next.t("app.monthOptions", "Choose month");
-  const localLocale = tz;
-
-  // adding cases where our lang w/o region
-  // isn't predefined in moment.
-  // because using defineLocale throws
-  // ugly deprecation warnings, we aren't doing:
-  //
-  // localLocale.defineLocale("zh", {
-  //   parentLocale: "zh-cn"
-  // });
-  let lang = i18next.language;
-  if (lang === "zh") {
-    lang = "zh-cn";
-  }
-
-  localLocale.locale(lang);
-  const monthOptions = [];
-
-  if (showDefaultOption) {
-    monthOptions.push({
-      value: "",
-      label: label
-    });
-  }
-
-  const months = localLocale.months();
-  // parse into autoform array
+  const monthOptions = [{
+    value: "",
+    label: label
+  }];
+  const months = moment.months();
   for (const index in months) {
     if ({}.hasOwnProperty.call(months, index)) {
       const month = months[index];
-      const mnum = parseInt(index, 10) + 1;
       monthOptions.push({
-        value: mnum,
-        label: `${mnum} | ${month}`
+        value: parseInt(index, 10) + 1,
+        label: month
       });
     }
   }
-
   return monthOptions;
 });
 
@@ -99,17 +72,12 @@ Template.registerHelper("monthOptions", function (showDefaultOption = true) {
  * @summary formats moment.js next 9 years into array for autoform selector
  * @return {Array} returns array of years [value:, label:]
  */
-Template.registerHelper("yearOptions", function (showDefaultOption = true) {
+Template.registerHelper("yearOptions", function () {
   const label = i18next.t("app.yearOptions", "Choose year");
-  const yearOptions = [];
-
-  if (showDefaultOption) {
-    yearOptions.push({
-      value: "",
-      label: label
-    });
-  }
-
+  const yearOptions = [{
+    value: "",
+    label: label
+  }];
   let year = new Date().getFullYear();
   for (let i = 1; i < 9; i++) {
     yearOptions.push({
@@ -191,7 +159,7 @@ Template.registerHelper("capitalize", function (str) {
  * @return {String|undefined} returns camelCased string
  */
 Template.registerHelper("toCamelCase", function (str) {
-  return !!str && toCamelCase(str);
+  return !!str && str.toCamelCase();
 });
 
 
@@ -308,8 +276,11 @@ Template.registerHelper("nl2br", function (text) {
  * @return {Date} return formatted date
  */
 Template.registerHelper("dateFormat", function (context, block) {
-  const f = block.hash.format || "MMM DD, YYYY hh:mm:ss A";
-  return moment(context).format(f);
+  if (window.moment) {
+    const f = block.hash.format || "MMM DD, YYYY hh:mm:ss A";
+    return moment(context).format(f);
+  }
+  return context;
 });
 
 /**
@@ -323,7 +294,10 @@ Template.registerHelper("dateFormat", function (context, block) {
  * @return {Date} return formatted date
  */
 Template.registerHelper("timeAgo", function (context) {
-  return moment(context).from(new Date());
+  if (window.moment) {
+    return moment(context).from(new Date());
+  }
+  return context;
 });
 
 

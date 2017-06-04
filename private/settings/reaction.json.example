@@ -20,9 +20,6 @@
                 "host": "",
                 "port": ""
             },
-            "cart": {
-                "cleanupDurationDays": "older than 3 days"
-            },
             "services": [{
                 "facebook": {
                     "appId": "",
@@ -39,9 +36,7 @@
         "name": "reaction-paypal",
         "enabled": true,
         "settings": {
-            "express": {
-              "enabled": true
-            },
+            "express_enabled": true,
             "express_mode": false,
             "merchantId": "",
             "username": "",

@@ -1,16 +1,30 @@
-import EmailLogs from "../containers/emailLogs";
-import EmailConfig from "../containers/emailConfig";
+import EmailStatusPage from "../components/email_status_page";
+import EmailDashboardTabs from "../components/email_dashboard_tabs";
+import EmailSettings from "../containers/email_settings";
 
-
-Template.emailSettings.helpers({
-  EmailConfig() {
+// main page content
+Template.emailStatusPage.helpers({
+  EmailStatusPage() {
     return {
-      component: EmailConfig
+      component: EmailStatusPage
     };
-  },
-  EmailLogs() {
+  }
+});
+
+// navigation tabs
+Template.emailDashboardTabs.helpers({
+  EmailDashboardTabs() {
     return {
-      component: EmailLogs
+      component: EmailDashboardTabs
+    };
+  }
+});
+
+// settings popout (Reaction.showActionView())
+Template.emailSettings.helpers({
+  EmailSettings() {
+    return {
+      component: EmailSettings
     };
   }
 });

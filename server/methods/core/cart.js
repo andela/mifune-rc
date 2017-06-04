@@ -2,6 +2,7 @@ import _ from "lodash";
 import { Meteor } from "meteor/meteor";
 import { check } from "meteor/check";
 import * as Collections from "/lib/collections";
+import * as Schemas from "/lib/collections/schemas";
 import { Logger, Reaction } from "/server/api";
 
 /**
@@ -20,7 +21,7 @@ function quantityProcessing(product, variant, itemQty = 1) {
   const MAX = variant.inventoryQuantity || Infinity;
 
   if (MIN > MAX) {
-    Logger.debug(`productId: ${product._id}, variantId ${variant._id
+    Logger.info(`productId: ${product._id}, variantId ${variant._id
       }: inventoryQuantity lower then minimum order`);
     throw new Meteor.Error(`productId: ${product._id}, variantId ${variant._id
       }: inventoryQuantity lower then minimum order`);
@@ -33,7 +34,7 @@ function quantityProcessing(product, variant, itemQty = 1) {
     default: // type: `simple` // todo: maybe it should be "variant"
       if (quantity < MIN) {
         quantity = MIN;
-      } else if (variant.inventoryPolicy && quantity > MAX) {
+      } else if (quantity > MAX) {
         quantity = MAX;
       }
   }
@@ -237,7 +238,7 @@ Meteor.methods({
     const anonymousUser = Roles.userIsInRole(userId, "anonymous", shopId);
     const sessionCartCount = getSessionCarts(userId, sessionId, shopId).length;
 
-    Logger.debug("create cart: shopId", shopId);
+    Logger.info("create cart: shopId", shopId);
     Logger.debug("create cart: userId", userId);
     Logger.debug("create cart: sessionId", sessionId);
     Logger.debug("create cart: sessionCarts.count", sessionCartCount);
@@ -272,17 +273,6 @@ Meteor.methods({
         }
       });
     }
-
-    // attach current user currency to cart
-    const currentUser = Meteor.user();
-    let userCurrency = Reaction.getShopCurrency();
-
-    // Check to see if the user has a custom currency saved to their profile
-    // Use it if they do
-    if (currentUser && currentUser.profile && currentUser.profile.currency) {
-      userCurrency = currentUser.profile.currency;
-    }
-    Meteor.call("cart/setUserCurrency", currentCartId, userCurrency);
 
     return currentCartId;
   },
@@ -319,14 +309,13 @@ Meteor.methods({
     Collections.Products.find({ _id: { $in: [
       productId,
       variantId
-    ] } }).forEach(doc => {
+    ]}}).forEach(doc => {
       if (doc.type === "simple") {
         product = doc;
       } else {
         variant = doc;
       }
     });
-
     // TODO: this lines still needed. We could uncomment them in future if
     // decide to not completely remove product data from this method
     // const product = Collections.Products.findOne(productId);
@@ -369,7 +358,7 @@ Meteor.methods({
         // reset selected shipment method
         Meteor.call("cart/resetShipmentMethod", cart._id);
 
-        Logger.debug(`cart: increment variant ${variantId} quantity by ${
+        Logger.info(`cart: increment variant ${variantId} quantity by ${
           quantity}`);
 
         return result;
@@ -388,8 +377,7 @@ Meteor.methods({
           quantity: quantity,
           variants: variant,
           title: product.title,
-          type: product.type,
-          parcel: product.parcel || null
+          type: product.type
         }
       }
     }, function (error, result) {
@@ -407,7 +395,7 @@ Meteor.methods({
       // reset selected shipment method
       Meteor.call("cart/resetShipmentMethod", cart._id);
 
-      Logger.debug(`cart: add variant ${variantId} to cartId ${cart._id}`);
+      Logger.info(`cart: add variant ${variantId} to cartId ${cart._id}`);
 
       return result;
     });
@@ -468,7 +456,7 @@ Meteor.methods({
             "error removing from cart");
           return error;
         }
-        Logger.debug(`cart: deleted cart item variant id ${cartItem.variants._id}`);
+        Logger.info(`cart: deleted cart item variant id ${cartItem.variants._id}`);
         return result;
       });
     }
@@ -489,7 +477,7 @@ Meteor.methods({
           "error removing from cart");
         return error;
       }
-      Logger.debug(`cart: removed variant ${cartItem._id} quantity of ${quantity}`);
+      Logger.info(`cart: removed variant ${cartItem._id} quantity of ${quantity}`);
       return result;
     });
   },
@@ -515,13 +503,7 @@ Meteor.methods({
     const order = Object.assign({}, cart);
     const sessionId = cart.sessionId;
 
-    if (!order.items || order.items.length === 0) {
-      const msg = "An error occurred saving the order. Missing cart items.";
-      Logger.error(msg);
-      throw new Meteor.Error("no-cart-items", msg);
-    }
-
-    Logger.debug("cart/copyCartToOrder", cartId);
+    Logger.info("cart/copyCartToOrder", cartId);
     // reassign the id, we'll get a new orderId
     order.cartId = cart._id;
 
@@ -569,56 +551,59 @@ Meteor.methods({
       order.shipping = [];
     }
 
-    // Add current exchange rate into order.billing.currency
-    // If user currenct === shop currency, exchange rate = 1.0
-    const currentUser = Meteor.user();
-    let userCurrency = Reaction.getShopCurrency();
-    let exchangeRate = "1.00";
+    const expandedItems = [];
 
-    if (currentUser && currentUser.profile && currentUser.profile.currency) {
-      userCurrency = Meteor.user().profile.currency;
-    }
+    // init item level workflow
+    _.each(order.items, function (item) {
+      // Split items based on their quantity
+      for (let i = 0; i < item.quantity; i++) {
+        // Clone Item
+        const itemClone = _.clone(item);
 
-    if (userCurrency !== Reaction.getShopCurrency()) {
-      const userExchangeRate = Meteor.call("shop/getCurrencyRates", userCurrency);
+        // Remove the quantity since we'll be expanding each item as
+        // it's own record
+        itemClone.quantity = 1;
 
-      if (typeof userExchangeRate === "number") {
-        exchangeRate = userExchangeRate;
-      } else {
-        Logger.warn("Failed to get currency exchange rates. Setting exchange rate to null.");
-        exchangeRate = null;
-      }
-    }
+        itemClone._id = Random.id();
+        itemClone.cartItemId = item._id; // used for transitioning inventry
+        itemClone.workflow = {
+          status: "new"
+        };
 
-    if (!order.billing[0].currency) {
-      order.billing[0].currency = {
-        userCurrency: userCurrency
-      };
-    }
+        expandedItems.push(itemClone);
 
-    _.each(order.items, (item) => {
-      if (order.shipping[0].items) {
-        order.shipping[0].items.push({
-          _id: item._id,
-          productId: item.productId,
-          shopId: item.shopId,
-          variantId: item.variants._id
-        });
+        // Add each item clone to the first shipment
+        if (order.shipping[0].items) {
+          order.shipping[0].items.push({
+            _id: itemClone._id,
+            productId: itemClone.productId,
+            shopId: itemClone.shopId,
+            variantId: itemClone.variants._id
+          });
+        }
       }
     });
 
-    order.shipping[0].items.packed = false;
-    order.shipping[0].items.shipped = false;
-    order.shipping[0].items.delivered = false;
+    // Replace the items with the expanded array of items
+    order.items = expandedItems;
 
-    order.billing[0].currency.exchangeRate = exchangeRate;
+    if (!order.items || order.items.length === 0) {
+      const msg = "An error occurred saving the order. Missing cart items.";
+      Logger.error(msg);
+      throw new Meteor.Error("no-cart-items", msg);
+    }
+
+    // set new workflow status
     order.workflow.status = "new";
     order.workflow.workflow = ["coreOrderWorkflow/created"];
 
     // insert new reaction order
     const orderId = Collections.Orders.insert(order);
+    Logger.info("Created orderId", orderId);
 
     if (orderId) {
+      // TODO: check for successful orders/inventoryAdjust
+      // Meteor.call("orders/inventoryAdjust", orderId);
       Collections.Cart.remove({
         _id: order.cartId
       });
@@ -719,65 +704,6 @@ Meteor.methods({
   },
 
   /**
-   * cart/setUserCurrency
-   * @summary saves user currency in cart, to be paired with order/setCurrencyExhange
-   * @param {String} cartId - cartId to apply setUserCurrency
-   * @param {String} userCurrency - userCurrency to set to cart
-   * @return {Number} update result
-   */
-  "cart/setUserCurrency": function (cartId, userCurrency) {
-    check(cartId, String);
-    check(userCurrency, String);
-    const cart = Collections.Cart.findOne({
-      _id: cartId
-    });
-    if (!cart) {
-      Logger.error(`Cart not found for user: ${ this.userId }`);
-      throw new Meteor.Error("Cart not found for user with such id");
-    }
-
-    const userCurrencyString = {
-      userCurrency: userCurrency
-    };
-
-    let selector;
-    let update;
-
-    if (cart.billing) {
-      selector = {
-        "_id": cartId,
-        "billing._id": cart.billing[0]._id
-      };
-      update = {
-        $set: {
-          "billing.$.currency": userCurrencyString
-        }
-      };
-    } else {
-      selector = {
-        _id: cartId
-      };
-      update = {
-        $addToSet: {
-          billing: {
-            currency: userCurrencyString
-          }
-        }
-      };
-    }
-
-    // add / or set the shipping address
-    try {
-      Collections.Cart.update(selector, update);
-    } catch (e) {
-      Logger.error(e);
-      throw new Meteor.Error("An error occurred adding the currency");
-    }
-
-    return true;
-  },
-
-  /**
    * cart/resetShipmentMethod
    * @summary removes `shipmentMethod` object from cart
    * @param {String} cartId - cart _id
@@ -810,7 +736,7 @@ Meteor.methods({
    */
   "cart/setShipmentAddress": function (cartId, address) {
     check(cartId, String);
-    check(address, Reaction.Schemas.Address);
+    check(address, Schemas.Address);
 
     const cart = Collections.Cart.findOne({
       _id: cartId,
@@ -894,7 +820,7 @@ Meteor.methods({
    */
   "cart/setPaymentAddress": function (cartId, address) {
     check(cartId, String);
-    check(address, Reaction.Schemas.Address);
+    check(address, Schemas.Address);
 
     const cart = Collections.Cart.findOne({
       _id: cartId,
@@ -964,7 +890,7 @@ Meteor.methods({
     const selector = {
       _id: cart._id
     };
-    const update = { $unset: {} };
+    const update = { $unset: {}};
     // user could turn off the checkbox in address to not to be default, then we
     // receive `type` arg
     if (typeof type === "string") {
@@ -1017,7 +943,7 @@ Meteor.methods({
    * @return {String} returns update result
    */
   "cart/submitPayment": function (paymentMethod) {
-    check(paymentMethod, Reaction.Schemas.PaymentMethod);
+    check(paymentMethod, Schemas.PaymentMethod);
 
     const checkoutCart = Collections.Cart.findOne({
       userId: Meteor.userId()

@@ -1,7 +1,6 @@
 import { Products, Revisions } from "/lib/collections";
-import { Reaction, Logger } from "/server/api";
+import { Reaction } from "/server/api";
 import { RevisionApi } from "/imports/plugins/core/revisions/lib/api/revisions";
-import { findProductMedia } from "./product";
 
 //
 // define search filters as a schema so we can validate
@@ -70,38 +69,24 @@ const filters = new SimpleSchema({
  */
 Meteor.publish("Products", function (productScrollLimit = 24, productFilters, sort = {}) {
   check(productScrollLimit, Number);
-  check(productFilters, Match.OneOf(undefined, Object));
+  check(productFilters, Match.OneOf(undefined, filters));
   check(sort, Match.OneOf(undefined, Object));
 
-  // if there are filter/params that don't match the schema
-  // validate, catch except but return no results
-  try {
-    check(productFilters, Match.OneOf(undefined, filters));
-  } catch (e) {
-    Logger.debug(e, "Invalid Product Filters");
-    return this.ready();
-  }
-  // ensure that we've got a shop instance
   const shop = Reaction.getCurrentShop();
+
   if (typeof shop !== "object") {
     return this.ready();
   }
 
   if (shop) {
-    const selector = {};
-    if (Roles.userIsInRole(this.userId, ["owner", "admin", "createProduct"], shop._id)) {
-      _.extend(selector, {
-        isDeleted: { $in: [null, false] },
-        ancestors: { $exists: true },
-        shopId: shop._id
-      });
-    } else { // Changing the selector for non admin users only. To get top-level products.
-      _.extend(selector, {
-        isDeleted: { $in: [null, false] },
-        ancestors: [],
-        shopId: shop._id
-      });
-    }
+    const selector = {
+      isDeleted: {$in: [null, false]},
+      ancestors: {
+        $exists: true,
+        $eq: []
+      },
+      shopId: shop._id
+    };
 
     if (productFilters) {
       // handle multiple shops
@@ -235,53 +220,24 @@ Meteor.publish("Products", function (productScrollLimit = 24, productFilters, so
           }
         });
       }
-    } // end if productFilters
+    }
 
     // Authorized content curators fo the shop get special publication of the product
-    // with all relevant revisions all is one package
+    // all all relevant revisions all is one package
 
     if (Roles.userIsInRole(this.userId, ["owner", "admin", "createProduct"], shop._id)) {
       selector.isVisible = {
         $in: [true, false, undefined]
       };
 
-      // Get _ids of top-level products
-      const productIds = Products.find(selector, {
-        sort: sort,
-        limit: productScrollLimit
-      }).map(product => product._id);
-
-      let newSelector = selector;
-
-      // Remove hashtag filter from selector (hashtags are not applied to variants, we need to get variants)
-      if (productFilters && productFilters.tags) {
-        newSelector = _.omit(selector, ["hashtags"]);
-
-        // Re-configure selector to pick either Variants of one of the top-level products, or the top-level products in the filter
-        _.extend(newSelector, {
-          $or: [
-            {
-              ancestors: {
-                $in: productIds
-              }
-            }, {
-              hashtags: {
-                $in: productFilters.tags
-              }
-            }
-          ]
-        });
-      }
-
       if (RevisionApi.isRevisionControlEnabled()) {
-        const productCursor = Products.find(newSelector);
-        const handle = productCursor.observeChanges({
+        const handle = Products.find(selector, {
+          sort: sort,
+          limit: productScrollLimit
+        }).observeChanges({
           added: (id, fields) => {
             const revisions = Revisions.find({
-              "$or": [
-                { documentId: id },
-                { parentDocument: id }
-              ],
+              "documentId": id,
               "workflow.status": {
                 $nin: [
                   "revision/published"
@@ -294,10 +250,7 @@ Meteor.publish("Products", function (productScrollLimit = 24, productFilters, so
           },
           changed: (id, fields) => {
             const revisions = Revisions.find({
-              "$or": [
-                { documentId: id },
-                { parentDocument: id }
-              ],
+              "documentId": id,
               "workflow.status": {
                 $nin: [
                   "revision/published"
@@ -319,120 +272,48 @@ Meteor.publish("Products", function (productScrollLimit = 24, productFilters, so
               "revision/published"
             ]
           }
-        }).observe({
-          added: (revision) => {
-            let product;
-            if (!revision.documentType || revision.documentType === "product") {
-              product = Products.findOne(revision.documentId);
-            } else if (revision.documentType === "image" || revision.documentType === "tag") {
-              product = Products.findOne(revision.parentDocument);
-            }
-
-            if (product) {
-              this.added("Products", product._id, product);
-              this.added("Revisions", revision._id, revision);
-            }
+        }).observeChanges({
+          added: (id, fields) => {
+            this.added("Revisions", id, fields);
           },
-          changed: (revision) => {
-            let product;
-            if (!revision.documentType || revision.documentType === "product") {
-              product = Products.findOne(revision.documentId);
-            } else if (revision.documentType === "image" || revision.documentType === "tag") {
-              product = Products.findOne(revision.parentDocument);
-            }
-            if (product) {
+          changed: (id, fields) => {
+            const revision = Revisions.findOne(id);
+
+            // Only update the revision on the published products if
+            // the revision status was update
+            if (revision.workflow.status === "revision/update") {
+              const product = Products.findOne(revision.documentId);
+
               product.__revisions = [revision];
               this.changed("Products", product._id, product);
-              this.changed("Revisions", revision._id, revision);
             }
+            this.changed("Revisions", id, fields);
           },
-          removed: (revision) => {
-            let product;
-
-            if (!revision.documentType || revision.documentType === "product") {
-              product = Products.findOne(revision.documentId);
-            } else if (revision.docuentType === "image" || revision.documentType === "tag") {
-              product = Products.findOne(revision.parentDocument);
-            }
-            if (product) {
-              product.__revisions = [];
-              this.changed("Products", product._id, product);
-              this.removed("Revisions", revision._id, revision);
-            }
+          removed: (id) => {
+            this.removed("Revisions", id);
           }
         });
-
 
         this.onStop(() => {
           handle.stop();
           handle2.stop();
         });
 
-        const mediaProductIds = productCursor.fetch().map((p) => p._id);
-        const mediaCursor = findProductMedia(this, mediaProductIds);
-
-        return [
-          mediaCursor
-        ];
+        return this.ready();
       }
-      // Revision control is disabled, but is admin
-      const productCursor = Products.find(newSelector, {
+      // Revision control is disabled
+      return Products.find(selector, {
         sort: sort,
         limit: productScrollLimit
       });
-      const mediaProductIds = productCursor.fetch().map((p) => p._id);
-      const mediaCursor = findProductMedia(this, mediaProductIds);
-
-      return [
-        productCursor,
-        mediaCursor
-      ];
     }
 
-    // Everyone else gets the standard, visible products
+    // Everyone else gets the standard, visibile products
     selector.isVisible = true;
 
-    // Get _ids of top-level products
-    const productIds = Products.find(selector, {
+    return Products.find(selector, {
       sort: sort,
       limit: productScrollLimit
-    }).map(product => product._id);
-
-    let newSelector = selector;
-
-    // Remove hashtag filter from selector (hashtags are not applied to variants, we need to get variants)
-    if (productFilters && productFilters.tags) {
-      newSelector = _.omit(selector, ["hashtags"]);
-
-      // Re-configure selector to pick either Variants of one of the top-level products, or the top-level products in the filter
-      _.extend(newSelector, {
-        $or: [
-          {
-            ancestors: {
-              $in: productIds
-            }
-          }, {
-            hashtags: {
-              $in: productFilters.tags
-            }
-          }
-        ]
-      });
-    }
-    // Returning Complete product tree for top level products to avoid sold out warning.
-    const productCursor = Products.find({
-      $or: [
-        { _id: { $in: productIds } },
-        { ancestors: { $in: productIds } }
-      ]
     });
-
-    const mediaProductIds = productCursor.fetch().map((p) => p._id);
-    const mediaCursor = findProductMedia(this, mediaProductIds);
-
-    return [
-      productCursor,
-      mediaCursor
-    ];
   }
 });

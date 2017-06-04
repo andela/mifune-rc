@@ -6,13 +6,15 @@ import { Roles } from "meteor/alanning:roles";
  * Email Job Logs
  * @type {Object} options - standard publication options object
  */
-Meteor.publish("Emails", function (query, options) {
-  check(query, Match.Optional(Object));
-  check(options, Match.Optional(Object));
-
+Meteor.publish("emailJobs", function (limit) {
   if (Roles.userIsInRole(this.userId, ["owner", "admin", "dashboard"])) {
-    Counts.publish(this, "emails-count", Jobs.find({ type: "sendEmail" }));
-    return Jobs.find({ type: "sendEmail" });
+    check(limit, Match.Optional(Number));
+    return Jobs.find({ type: "sendEmail" }, {
+      sort: {
+        updated: -1
+      },
+      limit: limit || 10
+    });
   }
 
   return this.ready();

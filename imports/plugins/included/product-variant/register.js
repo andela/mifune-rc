@@ -35,23 +35,7 @@ Reaction.registerPackage({
       layoutHeader: "layoutHeader",
       layoutFooter: "",
       notFound: "productNotFound",
-      dashboardHeader: "productDetailSimpleToolbar",
-      dashboardControls: "productDetailDashboardControls",
-      dashboardHeaderControls: "",
-      adminControlsFooter: "adminControlsFooter"
-    }
-  }, {
-    layout: "coreLayout",
-    workflow: "coreProductGridWorkflow",
-    collection: "Products",
-    theme: "default",
-    enabled: true,
-    structure: {
-      template: "products",
-      layoutHeader: "layoutHeader",
-      layoutFooter: "",
-      notFound: "productNotFound",
-      dashboardHeader: "gridPublishControls",
+      dashboardHeader: "",
       dashboardControls: "productDetailDashboardControls",
       dashboardHeaderControls: "",
       adminControlsFooter: "adminControlsFooter"

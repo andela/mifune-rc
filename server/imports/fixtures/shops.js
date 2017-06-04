@@ -7,11 +7,6 @@ export function getShop() {
   return existingShop || Factory.create("shop");
 }
 
-export function getShopId() {
-  const shop = Shops.find({}).fetch()[0];
-  return shop && shop._id;
-}
-
 export function getAddress(options = {}) {
   const defaults = {
     fullName: faker.name.findName(),
@@ -115,12 +110,6 @@ export function createShopFactory() {
       enabled: true
     }],
     public: true,
-    brandAssets: [
-      {
-        mediaId: "J8Bhq3uTtdgwZx3rz",
-        type: "navbarBrandImage"
-      }
-    ],
     timezone: "US/Pacific",
     metafields: [],
     defaultRoles: ["guest", "account/profile"],

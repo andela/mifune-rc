@@ -41,8 +41,8 @@
     /**
      * ES6
      */
-    "object-curly-spacing": ["error", "always", { "objectsInObjects": true }],
     "no-var": 2, // http://eslint.org/docs/rules/no-var
+
     /**
      * Variables
      */
@@ -119,8 +119,8 @@
     /**
      * Best practices
      */
-    "consistent-return": [0, { // http://eslint.org/docs/rules/consistent-return
-      "treatUndefinedAsUnspecified": true
+    "consistent-return": [1, { // http://eslint.org/docs/rules/consistent-return
+      "treatUndefinedAsUnspecified": false
     }],
     "curly": [2, "multi-line"], // http://eslint.org/docs/rules/curly
     "default-case": 2, // http://eslint.org/docs/rules/default-case

@@ -1,7 +1,5 @@
 <template name="accountsDashboard">
   {{#if hasPermission 'accounts'}}
-
-    {{> memberForm}}
     <div class="container-fluid-sm">
 
       <div class="panel panel-default">
@@ -39,6 +37,7 @@
           {{/each}}
         </ul>
       </div>
+
     </div>
   {{/if}}
 </template>

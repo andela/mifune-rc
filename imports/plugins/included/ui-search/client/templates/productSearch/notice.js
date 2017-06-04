@@ -1,14 +1,14 @@
 /**
- * searchGridNotice helpers
+ * gridNotice helpers
  */
-Template.searchGridNotice.helpers({
+Template.gridNotice.helpers({
   isLowQuantity: function () {
-    return this.product.isLowQuantity;
+    return this.isLowQuantity;
   },
   isSoldOut: function () {
-    return this.product.isSoldOut;
+    return this.isSoldOut;
   },
   isBackorder: function () {
-    return this.product.isBackorder;
+    return this.isBackorder;
   }
 });

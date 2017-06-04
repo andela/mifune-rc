@@ -1,31 +1,34 @@
 import { Meteor } from "meteor/meteor";
 import { check } from "meteor/check";
-import { Reaction } from "/server/api";
+import { Cart } from "/lib/collections";
 
-export const methods = {
+Meteor.methods({
   /**
-   * payments/apply
+   * payments/paymentMethod
    * @summary adds payment to order
-   * @param {String} id - id
+   * @param {String} cartId - cartId
    * @param {Object} paymentMethod - formatted payment method object
-   * @param  {String} collection collection (either Orders or Cart)
    * @returns {String} return cart update result
    */
-  "payments/apply": function (id, paymentMethod, collection = "Cart") {
-    check(id, String);
+  "payments/paymentMethod": function (cartId, paymentMethod) {
+    check(cartId, String);
     check(paymentMethod, Object);
-    check(collection, String);
-    const Collection = Reaction.Collections[collection];
 
-    return Collection.update({
-      _id: id
+    // temp hack until we build out multiple payment handlers
+    const cart = Cart.findOne(cartId);
+    let paymentId = "";
+    if (cart.billing) {
+      paymentId = cart.billing[0]._id;
+    }
+
+    return Cart.upsert({
+      "_id": cartId,
+      "billing._id": paymentId
     }, {
       $addToSet: {
-        billing: { paymentMethod: paymentMethod }
+        "billing.paymentMethod": paymentMethod
       }
     });
   }
-};
 
-// export methods to Meteor
-Meteor.methods(methods);
+});
