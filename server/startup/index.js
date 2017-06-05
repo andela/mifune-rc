@@ -6,6 +6,7 @@ import Init from "./init";
 import Prerender from "./prerender";
 import { initTemplates } from "/server/api/core/templates";
 
+import ApiRoutes from "./rest-endpoints";
 
 export default function () {
   Accounts();
@@ -15,4 +16,5 @@ export default function () {
   Registry();
   Init();
   Prerender();
+  ApiRoutes();
 }
