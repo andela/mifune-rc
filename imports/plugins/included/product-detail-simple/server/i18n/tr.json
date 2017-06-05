@@ -6,9 +6,6 @@
       "admin": {
         "settings": {
           "productDetailsLabel": "Ürün Detayları"
-        },
-        "inventoryAlerts": {
-          "adjustedQuantity": "Ürününüz miktar stok maksimum miktara ayarlandı"
         }
       }
     }

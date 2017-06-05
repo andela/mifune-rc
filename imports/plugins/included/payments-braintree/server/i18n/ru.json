@@ -6,17 +6,17 @@
     "reaction-payments": {
       "admin": {
         "shortcut": {
-          "braintreeLabel": "Braintree",
-          "braintreeTitle": "Braintree"
+          "braintreeLabel": "Брейнтри",
+          "braintreeTitle": "Брейнтри"
         },
         "dashboard": {
-          "braintreeLabel": "Braintree",
-          "braintreeTitle": "Braintree",
+          "braintreeLabel": "Брейнтри",
+          "braintreeTitle": "Брейнтри",
           "braintreeDescription": "платежи Брейнтри"
         },
         "paymentSettings": {
-          "braintreeLabel": "Braintree",
-          "braintreeSettingsLabel": "Braintree",
+          "braintreeLabel": "Брейнтри",
+          "braintreeSettingsLabel": "Брейнтри",
           "braintreeCredentials": "Добавить учетные данные для включения"
         }
       },
