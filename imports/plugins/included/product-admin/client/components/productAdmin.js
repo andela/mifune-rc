@@ -380,7 +380,7 @@ class ProductAdmin extends Component {
         >
           <CardHeader
             actAsExpander={true}
-            i18nKeyTitle="productDetail.tags"
+            i18nKeyTitle="productDetailEdit.tags"
             title="Tags"
           />
           <CardBody expandable={true}>

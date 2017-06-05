@@ -10,7 +10,7 @@
         },
         "dashboard": {
           "stripeLabel": "Stripe",
-          "stripeDescription": "πληρωμές Stripe"
+          "stripeDescription": "πληρωμές stripe"
         },
         "paymentSettings": {
           "stripeLabel": "Stripe",
