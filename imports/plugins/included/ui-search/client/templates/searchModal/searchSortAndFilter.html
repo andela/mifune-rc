@@ -1,0 +1,36 @@
+<template name="searchSortAndFilter">
+  <div id="sorts-filters-container" class="hidden container">
+    <div id="sorts-container" class="row">
+      <p class="h3">Sort results by</p>
+      <div id="sort-by-price-container" class="col-md-4">
+        <select id="sort-by-price" class="form-control">
+          <option value="REL">Relevance</option>
+          <option value="ASC">Lowest Price</option>
+          <option value="DESC">Highest Price</option>
+        </select>
+      </div>
+    </div>
+    <div id="filters-container" class="row">
+      <p class="h3">Filter</p>
+      <div id="price-filter-container" class="col-xs-12 col-md-4">
+        <p class="h4">Filter by price</p>
+        <select class="form-control input-lg">
+          <option value="">$0 - $99</option>
+          <option value="">$100 - $299</option>
+          <option value="">$300 - $499</option>
+          <option value="">$500 - $999</option>
+          <option value="">More than $1000</option>
+        </select>
+      </div>
+      <div id="vendor-filter-container" class="col-xs-12 col-md-4">
+        <p class="h4">Filter by vendor</p>
+        <select class="form-control input-lg">
+          <option value="">All vendors</option>
+          <option value="">The Best</option>
+          <option value="">Salesman</option>
+          <option value="">Magnifico</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</template>

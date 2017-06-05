@@ -180,6 +180,9 @@ Template.searchModal.events({
       Blaze.remove(view);
     });
   },
+  "click [data-event-action=toggleSortFilterVisibility]": function () {
+    $("#sorts-filters-container").toggleClass("hidden");
+  },
   "click [data-event-action=clearSearch]": function (event, templateInstance) {
     $("#search-input").val("");
     $("#search-input").focus();
