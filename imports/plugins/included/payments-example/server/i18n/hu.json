@@ -18,8 +18,7 @@
           "examplePaymentLabel": "példa Szolgáltató",
           "examplePaymentSettingsLabel": "példa Fizetési",
           "exampleCredentials": "Ez egy példa a fizetési módszer beállítást.",
-          "apiClientId": "API ügyfél azonosító",
-          "supportedMethodsLabel": "Fizetés szolgáltatója támogatott módszerekkel"
+          "apiClientId": "API ügyfél azonosító"
         }
       }
     }

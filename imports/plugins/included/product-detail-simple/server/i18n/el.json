@@ -6,9 +6,6 @@
       "admin": {
         "settings": {
           "productDetailsLabel": "λεπτομέρειες προιόντος"
-        },
-        "inventoryAlerts": {
-          "adjustedQuantity": "ποσότητα του προϊόντος σας έχει ρυθμιστεί στο μέγιστο ποσότητα στο απόθεμα"
         }
       }
     }

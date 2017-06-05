@@ -5,8 +5,8 @@
     "reaction-shippo": {
       "admin": {
         "dashboard": {
-          "shippoLabel": "Shippo",
-          "shippoTitle": "Shippo",
+          "shippoLabel": "cloisonne",
+          "shippoTitle": "cloisonne",
           "shippoDescription": "Fraktsedlar och paketspårning"
         },
         "shippingGrid": {
@@ -22,7 +22,7 @@
         }
       },
       "shippo": {
-        "connectedAndSaved": "Inställningar Sparade! Shippo API är nu aktiverat."
+        "connectedAndSaved": "Inställningar Sparade! Cloisonne API är nu aktiverat."
       }
     }
   }

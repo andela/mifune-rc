@@ -18,8 +18,7 @@
           "examplePaymentLabel": "Ponudnik Primer",
           "examplePaymentSettingsLabel": "Primer plačila",
           "exampleCredentials": "To je nastavitev metoda plačila primer.",
-          "apiClientId": "API ID odjemalca",
-          "supportedMethodsLabel": "ponudnik plačilnih podprte metode"
+          "apiClientId": "API ID odjemalca"
         }
       }
     }

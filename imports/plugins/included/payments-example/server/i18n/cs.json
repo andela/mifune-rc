@@ -18,8 +18,7 @@
           "examplePaymentLabel": "Příklad Poskytovatel",
           "examplePaymentSettingsLabel": "Příklad platba",
           "exampleCredentials": "Jedná se o nastavení příklad způsob platby.",
-          "apiClientId": "API ID klienta",
-          "supportedMethodsLabel": "Metody podporované poskytovatelem plateb"
+          "apiClientId": "API ID klienta"
         }
       }
     }

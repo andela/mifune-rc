@@ -6,9 +6,6 @@
       "admin": {
         "settings": {
           "productDetailsLabel": "تفاصيل المنتج"
-        },
-        "inventoryAlerts": {
-          "adjustedQuantity": "تم تعديل كمية المنتج الخاص بك إلى الكمية القصوى في الأوراق المالية"
         }
       }
     }

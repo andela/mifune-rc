@@ -100,11 +100,7 @@
       {{#each order.items}}
         <tr>
           <td>{{quantity}}</td>
-          <td>
-            {{title}}
-            <br />
-            <small>{{variants.title}}</small>
-          </td>
+          <td>{{variants.title}}</td>
           <td>{{formatPrice variants.price}}</td>
         </tr>
       {{/each}}

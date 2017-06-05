@@ -329,24 +329,16 @@
       "order": {
         "created": "Ustvarjeno",
         "reference": "Reference",
-        "cancelInvoice": "Prekliči",
         "invoice": "Račun",
         "ordersNotFound": "Ni naročil",
         "approveInvoice": "Odobri",
-        "cancelOrderLabel": "Preklic naročila",
         "makeAdjustments": "prilagoditve",
         "capturePayment": "Capture plačila",
         "paymentCaptured": "plačilo Zajeto",
         "capturedTotal": "Zajeto Skupaj",
-        "canceledLabel": "preklicana",
         "refundAmount": "Znesek vračila",
-        "cancelOrder": "Ali želite preklicati naročilo?",
         "applyRefundToThisOrder": "Uporabi vračilo {{currencySymbol}}{{refund}} k temu, da bi?",
-        "applyRefundDuringCancelOrder": "To bo povrnil red skupaj {{currencySymbol}}{{invoiceTotal}}",
-        "cancelOrderThenRestock": "Ja, in obnovo",
-        "cancelOrderNoRestock": "Da, vendar se ne obnavlja stalež",
         "applyRefund": "Uporabi vračilo",
-        "refunding": "vračilo",
         "applyDiscount": "Uporabi popust",
         "adjustedTotal": "prilagojena Skupaj",
         "invalidDiscount": "Popust ne more biti večja od prvotne skupne cene",
@@ -370,8 +362,7 @@
           "completed": "končan",
           "canceled": "preklicana",
           "refunded": "Vrnjeno"
-        },
-        "showMore": "Pokaži več"
+        }
       },
       "orderShipping": {
         "shipTo": "Poslati v",
@@ -558,7 +549,7 @@
         "facebook": "Facebook",
         "google": "Google",
         "github": "GitHub",
-        "meetup": "Meetup",
+        "meetup": "Srečati se",
         "ok": "V redu",
         "twitter": "Twitter",
         "vk": "VK",
