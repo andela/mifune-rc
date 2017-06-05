@@ -20,3 +20,7 @@ import "./templates/layout/layout.html";
 
 import "./templates/theme/theme.html";
 import "./templates/theme/theme.js";
+
+// Static page
+import "./templates/layout/static-pages/shop-view.html";
+import "./templates/layout/static-pages/shop-view.js";

@@ -132,8 +132,11 @@ class ProductDetail extends Component {
                 <div className="right">
                   {this.props.socialComponent}
                 </div>
+                    <div className="vendor">
+                  { this.renderVendorEdit() }
+                  &nbsp;<a href={"/shop/" + this.product.shopId}><strong>Visit Shop</strong></a>
+                </div>
               </div>
-
 
               <div className="vendor">
                 <ProductField
