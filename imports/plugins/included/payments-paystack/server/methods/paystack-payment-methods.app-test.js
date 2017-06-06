@@ -2,13 +2,11 @@ import { Meteor } from "meteor/meteor";
 import { expect } from "meteor/practicalmeteor:chai";
 import { sinon } from "meteor/practicalmeteor:sinon";
 
-import { PaystackApi } from "../../lib/api/paystackApi";
+import { PaystackApi } from "./paystackapi";
 
 const paymentMethod = {
   processor: "Generic",
   storedCard: "Visa 4242",
-  paymentPackageId: "vrXutd72c2m7Lenqw",
-  paymentSettingsKey: "paystack-paymentmethod",
   status: "captured",
   mode: "authorize",
   createdAt: new Date()
@@ -73,11 +71,8 @@ describe("Submit payment", function () {
     sandbox.restore();
   });
 
-  it("should call paystack API with card and payment data", function () {
-    // this is a ridiculous timeout for a test that should run in subseconds
-    // but a bug in the Meteor test runner (or something) seems to make this test stall
-    // it actually stalls after the entire test is completed
-    this.timeout(30000);
+  it("should call Paystack API with card and payment data", function () {
+    this.timeout(3000);
     const cardData = {
       name: "Test User",
       number: "4242424242424242",
@@ -97,7 +92,7 @@ describe("Submit payment", function () {
     };
 
     const authorizeStub = sandbox.stub(PaystackApi.methods.authorize, "call", () => authorizeResult);
-    const results = Meteor.call("exampleSubmit", "authorize", cardData, paymentData);
+    const results = Meteor.call("paystackSubmit", "authorize", cardData, paymentData);
     expect(authorizeStub).to.have.been.calledWith({
       transactionType: "authorize",
       cardData: cardData,
@@ -226,4 +221,3 @@ describe("List Refunds", function () {
     expect(() => Meteor.call("paystack/refund/list", paymentMethod)).to.throw(Meteor.Error, /Not Found/);
   });
 });
-
