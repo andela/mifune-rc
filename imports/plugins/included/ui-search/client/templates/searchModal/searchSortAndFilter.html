@@ -27,7 +27,7 @@
         <select id="filter-by-brand" class="form-control input-lg">
           <option value="all" selected>All vendors</option>
           {{#each brand in getBrands productSearchResults }}
-          <option value="{{brand}}">{{brand}}</option>
+          <option value="{{brand}}">{{capitalize brand}}</option>
           {{/each}}
         </select>
       </div>

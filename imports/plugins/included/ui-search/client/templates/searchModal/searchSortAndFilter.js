@@ -4,11 +4,22 @@ import underscore from "underscore";
 
 Template.searchSortAndFilter.helpers({
   getBrands(products) {
-    console.log("The products are", products);
     const vendors = underscore.pluck(products, "vendor");
-    console.log(vendors);
-    // return underscore.uniq(vendors);
-    return ["reaction", "samsung", "iyanu"];
+    const noDuplicateVendors = underscore.uniq(vendors);
+    const lowerCasedVendors = noDuplicateVendors.map((vendor) => {
+      const lowerCased = vendor.toLowerCase();
+      return lowerCased;
+    });
+    return lowerCasedVendors;
+  },
+
+  capitalize(someString) {
+    if (!someString) {
+      return;
+    }
+    if (typeof someString === "string" && someString.length > 0) {
+      return someString[0].toUpperCase() + someString.substring(1, someString.length);
+    }
   }
 });
 

@@ -4,7 +4,7 @@
     <div class="rui search-modal-header">
       {{> searchInput }}
       {{> searchTypeToggle }}
-      {{> searchSortAndFilter }}
+      {{> searchSortAndFilter productSearchResults=productSearchResults }}
       {{> productSearchTags tagSearchResults=tagSearchResults }}
     </div>
     {{> searchResults productSearchResults=productSearchResults orderSearchResults=orderSearchResults accountSearchResults=accountSearchResults orderTable=orderTable accountTable=accountTable }}

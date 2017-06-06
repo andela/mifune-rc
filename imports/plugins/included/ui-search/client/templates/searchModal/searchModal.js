@@ -44,8 +44,7 @@ Template.searchModal.onCreated(function () {
   const brandFilter = (products, query) => {
     const productsWithBrand = _.filter(products, (product) => {
       const productVendor = product.vendor.toLowerCase();
-      const queryVendor = query.toLowerCase();
-      return productVendor === queryVendor;
+      return productVendor === query;
     });
     return productsWithBrand;
   };
