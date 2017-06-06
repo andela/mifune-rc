@@ -2,6 +2,7 @@ import _ from "lodash";
 import { Template } from "meteor/templating";
 import { ProductSearch, Tags, OrderSearch, AccountSearch } from "/lib/collections";
 import { IconButton } from "/imports/plugins/core/ui/client/components";
+import { Session } from "meteor/session";
 
 /*
  * searchModal extra functions
@@ -40,10 +41,53 @@ Template.searchModal.onCreated(function () {
     }
   });
 
+  const brandFilter = (products, query) => {
+    const productsWithBrand = _.filter(products, (product) => {
+      const productVendor = product.vendor.toLowerCase();
+      const queryVendor = query.toLowerCase();
+      return productVendor === queryVendor;
+    });
+    return productsWithBrand;
+  };
+
+  const priceFilter = (products, query) => {
+    const productsInPriceRange = _.filter(products, (product) => {
+      if (product.price) {
+        const prodMinPrice = parseFloat(product.price.min);
+        const prodMaxPrice = parseFloat(product.price.max);
+        const queryMinPrice = parseFloat(query[0]);
+        const queryMaxPrice = parseFloat(query[1]);
+        if (queryMinPrice <= prodMinPrice && queryMaxPrice >= prodMaxPrice) {
+          return product;
+        }
+        return false;
+      }
+    });
+    return productsInPriceRange;
+  };
+
+  const priceSort = (products, order) => {
+    // Note: the compareFunction() for Array.sort() needs to be specified, else
+    // the sort operation will be unstable. See https://goo.gl/gyBn3I.
+    const sortedByPrice = products.sort((a, b) => {
+      const A = a.price === null ? -1 : a.price.min;
+      const B = b.price === null ? -1 : b.price.min;
+      if (A < B) {
+        return order === "desc" ? 1 : -1;
+      } else if (A > B) {
+        return order === "asc" ? 1 : -1;
+      }
+      return 0;
+    });
+    return sortedByPrice;
+  };
 
   this.autorun(() => {
     const searchCollection = this.state.get("searchCollection") || "products";
     const searchQuery = this.state.get("searchQuery");
+    const priceSortQuery = Session.get("priceSort");
+    const brandFilterQuery = Session.get("brandFilter");
+    const priceFilterQuery = Session.get("priceFilter");
     const facets = this.state.get("facets") || [];
     const sub = this.subscribe("SearchResults", searchCollection, searchQuery, facets);
 
@@ -52,7 +96,22 @@ Template.searchModal.onCreated(function () {
        * Product Search
        */
       if (searchCollection === "products") {
-        const productResults = ProductSearch.find().fetch();
+        let productResults = ProductSearch.find().fetch();
+
+        const isDefaultBrandFilter = ["all"].includes(brandFilterQuery);
+        if (!isDefaultBrandFilter && brandFilterQuery) {
+          productResults = brandFilter(productResults, brandFilterQuery);
+        }
+        const isDefaultPriceFilter = ["all"].includes(priceFilterQuery);
+        if (!isDefaultPriceFilter && priceFilterQuery) {
+          const priceRange = priceFilterQuery.split("-");
+          productResults = priceFilter(productResults, priceRange);
+        }
+        const isDefaultPriceSort = ["all"].includes(priceSortQuery);
+        if (!isDefaultPriceSort && priceSortQuery) {
+          productResults = priceSort(productResults, priceSortQuery);
+        }
+
         const productResultsCount = productResults.length;
         this.state.set("productSearchResults", productResults);
         this.state.set("productSearchCount", productResultsCount);
