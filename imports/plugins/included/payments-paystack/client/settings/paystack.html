@@ -1,0 +1,24 @@
+<template name="paystackSettings">
+  <div class="panel panel-default">
+    <div class="panel-body">
+      {{#autoForm collection=Collections.Packages schema=PaystackPackageConfig doc=packageData type="update" id="paystack-update-form"}}
+      {{/autoForm}}
+    </div>
+  </div>
+</template>
+
+<template name="paystack">
+  <div class="container-fluid-sm flex">
+    <div class="flex-item">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <div class="panel-title">paystack Payment Method</div>
+        </div>
+        
+        <div class="panel-footer">
+        
+        </div>
+      </div>
+    </div>
+  </div>
+</template>

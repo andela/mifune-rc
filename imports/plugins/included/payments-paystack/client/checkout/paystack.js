@@ -1,13 +1,14 @@
-/* eslint camelcase: 0 */
-import { Meteor } from "meteor/meteor";
+/* eslint-disable no-undef */
 import { Template } from "meteor/templating";
-import { Reaction } from "/client/api";
-import { Cart, Shops } from "/lib/collections";
+import { Meteor } from "meteor/meteor";
 import { Random } from "meteor/random";
-import "./paystack.html";
+import { Cart } from "/lib/collections";
 import { PaystackPayment } from "../../lib/collections/schemas";
 import { Paystack } from "../../lib/api";
+import "./paystack.html";
 import "../../lib/api/paystackApi";
+import { Reaction } from "/client/api";
+import { Shops } from "/lib/collections";
 
 if (localStorage.getItem("currency") !== "NGN") {
   localStorage.setItem("currency", "NGN");
@@ -50,7 +51,7 @@ const handlePaystackSubmitError = (template, error) => {
   const serverError = error !== null ? error.message : void 0;
   if (serverError) {
     return paymentAlert("Oops! " + serverError);
-    }
+  }
   return paymentAlert("Oops! " + error, null, 4);
 };
 
