@@ -408,6 +408,10 @@
       "format": "%s%v",
       "symbol": "RM"
     },
+    "NGN": {
+      "format": "%s%v",
+      "symbol": "₦"
+    },
     "NZD": {
       "enabled": false,
       "format": "%s%v",
