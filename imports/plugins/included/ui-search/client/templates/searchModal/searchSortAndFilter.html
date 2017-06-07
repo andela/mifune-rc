@@ -1,7 +1,7 @@
 <template name="searchSortAndFilter">
-  <div id="sorts-filters-container" class="hidden container">
+  <div id="sorts-filters-container" class="hidden container sorts-filters-container">
     <div id="sorts-container" class="row">
-      <p class="h3">Sort results by</p>
+      <p class="h4">Sort results by</p>
       <div id="sort-by-price-container" class="col-md-4">
         <select id="sort-by-price" class="form-control">
           <option value="all">Relevance</option>
@@ -13,7 +13,7 @@
     <div id="filters-container" class="row">
       <div id="price-filter-container" class="col-xs-12 col-md-4">
         <p class="h4">Filter by price</p>
-        <select id="filter-by-price" class="form-control input-lg">
+        <select id="filter-by-price" class="form-control">
           <option value="all" selected>All prices</option>
           <option value="0-99">$0 - $99</option>
           <option value="100-299">$100 - $299</option>
@@ -24,7 +24,7 @@
       </div>
       <div id="vendor-filter-container" class="col-xs-12 col-md-4">
         <p class="h4">Filter by vendor</p>
-        <select id="filter-by-brand" class="form-control input-lg">
+        <select id="filter-by-brand" class="form-control">
           <option value="all" selected>All vendors</option>
           {{#each brand in getBrands productSearchResults }}
           <option value="{{brand}}">{{capitalize brand}}</option>
