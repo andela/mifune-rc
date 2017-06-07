@@ -70,7 +70,11 @@ const composer = ({}, onData) => {
   const subscription = Meteor.subscribe("Packages");
   if (subscription.ready()) {
     const packageData = Packages.findOne({
+<<<<<<< HEAD
       name: "paystack-paymentmethod",
+=======
+      name: "example-paymentmethod",
+>>>>>>> 54200697064626eb970f7263efebebf2b7866538
       shopId: Reaction.getShopId()
     });
     onData(null, { packageData });

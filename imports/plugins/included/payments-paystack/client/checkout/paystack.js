@@ -51,7 +51,11 @@ const handlePaystackSubmitError = (template, error) => {
   const serverError = error !== null ? error.message : void 0;
   if (serverError) {
     return paymentAlert("Oops! " + serverError);
+<<<<<<< HEAD
   }
+=======
+    }
+>>>>>>> 54200697064626eb970f7263efebebf2b7866538
   return paymentAlert("Oops! " + error, null, 4);
 };
 
@@ -118,3 +122,4 @@ AutoForm.addHooks("paystack-payment-form", {
     return false;
   }
 });
+
