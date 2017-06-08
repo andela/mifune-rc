@@ -3,29 +3,37 @@
   width: 100%;
   height: 100%;
   background-color: fade(@body-bg, 95%);
-  position: absolute;
+  position: fixed;
   top: 0;
+  left: 0;
+  overflow-y: scroll;
   z-index: @zindex-modal;
   padding: 0;
   margin: 0;
-  padding-top: 250px;
+}
+
+.rui.search-options-container {
+  min-height: 100%;
 }
 
 /* -------------------------- Close Modal Button -------------------------- */
 .rui.search-modal-close {
-  position: absolute;
-  top: 10px;
+  float: right;
   .right(10px);
-  z-index: 1051; //calc(@zindex-modal + 1); // calc() doesn't work for z-index in FireFox
+  z-index: 1051;
+}
+
+.rui.search-modal-close ::after {
+  clear: both;
 }
 
 /* -------------------------- Modal Header -------------------------- */
 .rui.search-modal-header {
+  z-index: 1000;
   width: 100%;
   padding-top: 40px;
   padding-bottom: 40px;
   background: @white;
-  position:fixed;
   top: 0;
   display: -webkit-box;
   display: -moz-box;
@@ -75,6 +83,10 @@
       background: @black25;
     }
   }
+
+  .toggle-sort-filter {
+    margin-right: 80px;
+  }
 }
 
 .rui.search-modal-input label {
@@ -90,6 +102,10 @@
   outline: none;
   font-size: 25px;
   background: transparent;
+}
+
+#sorts-filters-container {
+  margin: 1em 0;
 }
 
 
@@ -160,7 +176,6 @@
 .rui.search-modal-results-container {
   width: 100%;
   height: 100%;
-  overflow: scroll;
 
   @media @mobile {
     width: 100%;
