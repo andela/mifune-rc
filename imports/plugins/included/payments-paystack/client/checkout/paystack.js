@@ -1,13 +1,16 @@
-/* eslint camelcase: 0 */
-import { Meteor } from "meteor/meteor";
+/* eslint-disable no-undef */
 import { Template } from "meteor/templating";
-import { Reaction } from "/client/api";
-import { Cart, Shops } from "/lib/collections";
+import { Meteor } from "meteor/meteor";
 import { Random } from "meteor/random";
-import "./paystack.html";
+import { Cart } from "/lib/collections";
 import { PaystackPayment } from "../../lib/collections/schemas";
 import { Paystack } from "../../lib/api";
+import "./paystack.html";
 import "../../lib/api/paystackApi";
+import { Reaction } from "/client/api";
+import { Shops } from "/lib/collections";
+require("dotenv").config();
+
 
 if (localStorage.getItem("currency") !== "NGN") {
   localStorage.setItem("currency", "NGN");
@@ -50,7 +53,8 @@ const handlePaystackSubmitError = (template, error) => {
   const serverError = error !== null ? error.message : void 0;
   if (serverError) {
     return paymentAlert("Oops! " + serverError);
-    }
+  }
+
   return paymentAlert("Oops! " + error, null, 4);
 };
 
@@ -67,7 +71,7 @@ AutoForm.addHooks("paystack-payment-form", {
       const currency = findCurrency("USD");
       const amount = Math.round(currency.exchangeRate * cart.cartTotal()) * 100;
       const template = this.template;
-      const key = keys.public || "pk_test_0c613403a8f83ef2f7ea900b5251be2bf480ad2f";
+      const key = keys.public || "pk_test_bb2f4f654bf5a2b3c492ab1e9040d116bb1af435";
       const details = {
         key,
         name: doc.payerName,
@@ -75,7 +79,7 @@ AutoForm.addHooks("paystack-payment-form", {
         reference: Random.id(),
         amount,
         callback(response) {
-          const secret = keys.secret || "sk_test_8782ef1ae2f57fad588b342f5429ee9c54a9de88";
+          const secret = keys.secret || process.env.SECRET_KEY;
           const reference = response.reference;
           if (reference) {
             Paystack.verify(reference, secret, (error, res) => {
@@ -117,3 +121,4 @@ AutoForm.addHooks("paystack-payment-form", {
     return false;
   }
 });
+
