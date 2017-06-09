@@ -93,6 +93,7 @@
     "react-textarea-autosize": "^4.0.5",
     "shippo": "^1.2.0",
     "sortablejs": "^1.5.1",
+    "streams": "^0.1.0",
     "stripe": "^4.16.0",
     "sweetalert2": "^6.4.4",
     "swiper": "^3.4.2",

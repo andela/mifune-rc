@@ -4572,6 +4572,11 @@
       "from": "stream-browserify@2.0.1",
       "resolved": "https://registry.npmjs.org/stream-browserify/-/stream-browserify-2.0.1.tgz"
     },
+    "streams": {
+      "version": "0.1.0",
+      "from": "streams@latest",
+      "resolved": "https://registry.npmjs.org/streams/-/streams-0.1.0.tgz"
+    },
     "string_decoder": {
       "version": "1.0.0",
       "from": "string_decoder@>=1.0.0 <1.1.0",
