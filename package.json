@@ -36,7 +36,6 @@
     "deep-diff": "^0.3.4",
     "dnd-core": "^2.3.0",
     "dotenv": "^4.0.0",
-    "emitter": "0.0.5",
     "faker": "^4.1.0",
     "fibers": "^1.0.15",
     "flatten-obj": "^3.1.0",
