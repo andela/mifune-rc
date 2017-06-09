@@ -9,7 +9,10 @@ import "./paystack.html";
 import "../../lib/api/paystackApi";
 import { Reaction } from "/client/api";
 import { Shops } from "/lib/collections";
-require("dotenv").config();
+
+if (process.env.NODE_ENV === "development") {
+  require("dotenv").config();
+}
 
 
 if (localStorage.getItem("currency") !== "NGN") {
