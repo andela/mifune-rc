@@ -1972,6 +1972,11 @@
           "resolved": "https://registry.npmjs.org/delegates/-/delegates-1.0.0.tgz",
           "optional": true
         },
+        "dotenv": {
+          "version": "4.0.0",
+          "from": "dotenv@>=4.0.0 <5.0.0",
+          "resolved": "https://registry.npmjs.org/dotenv/-/dotenv-4.0.0.tgz"
+        },
         "ecc-jsbn": {
           "version": "0.1.1",
           "from": "ecc-jsbn@>=0.1.1 <0.2.0",
