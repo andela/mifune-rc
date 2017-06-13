@@ -5,7 +5,6 @@ import { Meteor } from "meteor/meteor";
 import { Template } from "meteor/templating";
 
 Template.loginDropdown.events({
-
   /**
    * Submit sign up form
    * @param  {Event} event - jQuery Event
@@ -70,10 +69,21 @@ Template.loginDropdown.events({
       Reaction.Router.go(route);
     }
     template.$(".dropdown-toggle").dropdown("toggle");
+  },
+
+  "click [data-event-action=visit-pages]": function (event) {
+    event.preventDefault();
+    console.log(Reaction.getShopId());
+    Reaction.Router.go(`/shop/${Reaction.getShopId()}`);
   }
+
 });
 
 Template.accountsDropdownApps.helpers({
+
+  slug() {
+    return `/shop/${Reaction.getShopId()}`;
+  },
   reactionAppsOptions() {
     // get shortcuts with audience permissions based on user roles
     const roles = Roles.getRolesForUser(Meteor.userId(), Reaction.getShopId());

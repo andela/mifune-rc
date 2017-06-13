@@ -51,7 +51,7 @@ function reset() {
 
 Template.staticPageLayout.onCreated(function () {
   Meteor.subscribe("StaticPages");
-  const template = Template.instance();
+  Template.instance();
 });
 
 Template.staticPageLayout.onRendered(function () {
@@ -104,13 +104,14 @@ Template.staticPageLayout.events({
    * @return {null} - no return value - no return value
    */
   "click [data-event-action=createPage]": function (event, template) {
+    console.log(template);
     event.preventDefault();
     template.pageDetails = {};
     template.errors = {};
 
     const title = template.$("#title").val().trim();
     const slug = template.$("#slug").val().trim();
-    const content = CKEDITOR.instances.$("#contentEditor").attr("name").getData();
+    const content = CKEDITOR.instances.contentEditor.getData();
     const shopId = Reaction.getShopId();
     const createdby = Meteor.userId();
 
@@ -147,9 +148,11 @@ Template.staticPageLayout.events({
         Meteor.call("pages/createPage", template.pageDetails, (error, page) => {
           if (!error && page) {
             // run a page reset
-            reset();
+            console.log('page', page);
+            //reset();
             return Alerts.toast("Page successfully created.");
           }
+          console.log(error)
           return Alerts.toast("Process failed! Unable to crate page.");
         });
       } else {
@@ -159,7 +162,7 @@ Template.staticPageLayout.events({
         Meteor.call("pages/update", template.pageDetails, (error, page) => {
           if (!error) {
             // run a page reset
-            reset();
+            //reset();
             $(".submit-btn").html("save");
             $("h2").text("Create a new page");
             return Alerts.toast("Page successfully updated.");
