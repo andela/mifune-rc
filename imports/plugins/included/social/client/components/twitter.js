@@ -14,6 +14,7 @@ export function getTwitterMeta(props) {
   const meta = [
     { name: "twitter:card", content: "summary" },
     { name: "twitter:creator", content: username },
+    { name: "twitter:site", content: username },
     { name: "twitter:url", content: url },
     { name: "twitter:title", content: title },
     { name: "twitter:description", content: description }
