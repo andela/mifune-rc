@@ -12,11 +12,11 @@ export function getTwitterMeta(props) {
   const description = props.settings.description;
 
   const meta = [
-    { property: "twitter:card", content: "summary" },
-    { property: "twitter:creator", content: username },
-    { property: "twitter:url", content: url },
-    { property: "twitter:title", content: title },
-    { property: "twitter:description", content: description }
+    { name: "twitter:card", content: "summary" },
+    { name: "twitter:creator", content: username },
+    { name: "twitter:url", content: url },
+    { name: "twitter:title", content: title },
+    { name: "twitter:description", content: description }
   ];
 
   if (props.media) {
@@ -31,6 +31,7 @@ export function getTwitterMeta(props) {
       content: media
     });
   }
+  return meta;
 }
 
 class TwitterSocialButton extends Component {
