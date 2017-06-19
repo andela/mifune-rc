@@ -18,8 +18,7 @@
           "examplePaymentLabel": "Пример Provider",
           "examplePaymentSettingsLabel": "Пример плащане",
           "exampleCredentials": "Това е настройка за пример начина на плащане.",
-          "apiClientId": "API Client ID",
-          "supportedMethodsLabel": "Методи, поддържани от доставчика на плащания"
+          "apiClientId": "API Client ID"
         }
       }
     }

@@ -6,9 +6,6 @@
       "admin": {
         "settings": {
           "productDetailsLabel": "Produktinformation"
-        },
-        "inventoryAlerts": {
-          "adjustedQuantity": "Din produkt mängd har justerats till max antal i lager"
         }
       }
     }

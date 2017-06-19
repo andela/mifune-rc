@@ -18,8 +18,7 @@
           "examplePaymentLabel": "Örnek Sağlayıcı",
           "examplePaymentSettingsLabel": "Örnek Ödeme",
           "exampleCredentials": "Bu örnek bir ödeme yöntemi ayarıdır.",
-          "apiClientId": "API İstemci Kimliği",
-          "supportedMethodsLabel": "Ödeme sağlayıcısı tarafından desteklenen yöntemler"
+          "apiClientId": "API İstemci Kimliği"
         }
       }
     }

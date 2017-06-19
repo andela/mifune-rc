@@ -118,7 +118,7 @@ class ProductDetailContainer extends Component {
         if (productId) {
           Meteor.call("cart/addToCart", productId, currentVariant._id, quantity, (error) => {
             if (error) {
-              Logger.error(error, "Failed to add to cart.");
+              Logger.error("Failed to add to cart.", error);
               return error;
             }
             // Reset cart quantity on success
@@ -261,11 +261,12 @@ ProductDetailContainer.propTypes = {
 };
 
 function composer(props, onData) {
+  const userId = Meteor.userId();
   const tagSub = Meteor.subscribe("Tags");
   const productId = Reaction.Router.getParam("handle");
   const variantId = Reaction.Router.getParam("variantId");
   const revisionType = Reaction.Router.getQueryParam("revision");
-  const viewProductAs = Reaction.getUserPreferences("reaction-dashboard", "viewAs", "administrator");
+  let viewProductAs = Reaction.getUserPreferences("reaction-dashboard", "viewAs", "administrator");
 
   let productSub;
 
@@ -352,7 +353,11 @@ function composer(props, onData) {
       if (viewProductAs === "customer") {
         editable = false;
       } else {
-        editable = Reaction.hasPermission(["createProduct"]);
+        editable = Reaction.hasPermission(["createProduct"], userId, product.shopId);
+
+        if (!editable) {
+          viewProductAs = "customer";
+        }
       }
 
       const topVariants = ReactionProduct.getTopVariants();

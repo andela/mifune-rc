@@ -10,12 +10,12 @@
         },
         "dashboard": {
           "stripeLabel": "Stripe",
-          "stripeDescription": "Stripe betalningar"
+          "stripeDescription": "rand betalningar"
         },
         "paymentSettings": {
           "stripeLabel": "Stripe",
           "stripeSettingsLabel": "Stripe",
-          "stripeSettingsDescription": "Inte ha en Stripe API-klient-ID?",
+          "stripeSettingsDescription": "Inte ha en rand API-klient-ID?",
           "stripeSettingsGetItHere": "Få det här"
         }
       }

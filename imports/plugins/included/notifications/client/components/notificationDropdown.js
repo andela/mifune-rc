@@ -27,16 +27,6 @@ class NotificationDropdown extends Component {
   }
 
   handleClick(notify) {
-    if (notify.type === "forAdmin") {
-      const actionViewData = Reaction.Apps({
-        name: "reaction-orders",
-        provides: "dashboard"
-      });
-      Reaction.showActionView(actionViewData);
-    } else {
-      Reaction.Router.go(notify.url);
-    }
-
     const { markOneAsRead } = this.props;
     return markOneAsRead(notify._id);
   }
@@ -71,7 +61,7 @@ class NotificationDropdown extends Component {
                   const i18n = `notifications.messages.${notify.type}`;
                   return (
                         <li className={read} key={key}>
-                            <a onClick={() => {
+                            <a href={notify.url} onClick={() => {
                               this.handleClick(notify);
                             }}
                             >

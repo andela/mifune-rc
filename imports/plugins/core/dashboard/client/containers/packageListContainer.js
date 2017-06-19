@@ -15,10 +15,9 @@ function handleShowPackage(event, app) {
 }
 
 function composer(props, onData) {
-  const audience = Roles.getRolesForUser(Meteor.userId(), Reaction.getShopId());
-  const settings = Reaction.Apps({ provides: "settings", enabled: true, audience }) || [];
+  const settings = Reaction.Apps({ provides: "settings", enabled: true }) || [];
 
-  const dashboard = Reaction.Apps({ provides: "dashboard", enabled: true, audience })
+  const dashboard = Reaction.Apps({ provides: "dashboard", enabled: true })
     .filter((d) => typeof Template[d.template] !== "undefined") || [];
 
   onData(null, {
