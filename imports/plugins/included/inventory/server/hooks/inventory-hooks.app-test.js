@@ -112,16 +112,8 @@ describe("Inventory Hooks", function () {
         }
       });
     spyOnMethod("copyCartToOrder", cart.userId);
-
-
-    // TODO: Should review after merging tag >= 1.1.1 to ensure compatibility
-    // Fixes bug where finding order by id was returning undefined
-    // Previously assigned orderId to the result of this.
-    // const orderId = Meteor.call("cart/copyCartToOrder", cart._id).result;
-    Meteor.call("cart/copyCartToOrder", cart._id);
-
-    // Previously was finding order by orderId
-    const order = Orders.findOne({ cartId: cart._id });
+    const orderId = Meteor.call("cart/copyCartToOrder", cart._id).result;
+    const order = Orders.findOne(orderId);
     const shipping = { items: [] };
     Meteor.call("orders/shipmentShipped", order, shipping, () => {
       Meteor._sleepForMs(500);
