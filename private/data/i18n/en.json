@@ -32,8 +32,7 @@
           "dashboard": "Dashboard",
           "misc": "Misc",
           "paymentMethod": "Payment Providers",
-          "utilities": "Utilities",
-          "marketplace": "Marketplace"
+          "utilities": "Utilities"
         },
         "settings": {
           "accountSettingsLabel": "Login Services",
@@ -142,9 +141,7 @@
         "shopOptionsSettingsSaved": "Shop options saved.",
         "shopOptionsSettingsFailed": "Shop options update failed.",
         "shopPaymentMethodsSaved": "Shop Payment Methods settings saved.",
-        "shopPaymentMethodsFailed": "Shop Payment Methods settings update failed.",
-        "shopBrandAssetsSaved": "Updated brand asset",
-        "shopBrandAssetsFailed": "Couldn't update brand asset"
+        "shopPaymentMethodsFailed": "Shop Payment Methods settings update failed."
       },
       "notifications": {
         "body": {
@@ -276,20 +273,20 @@
         "price": "Price",
         "optionTitle": "Option",
         "barcode": "Barcode",
-        "compareAtPrice": "Price (MSRP)",
+        "compareAtPrice": "MSRP",
         "fulfillmentService": "Fulfillment service",
         "weight": "Weight",
         "length": "Length",
         "width": "Width",
         "height": "Height",
         "taxable": "Taxable",
-        "taxCode": "Tax Codes",
+        "taxCode": "Tax Code",
         "taxDescription": "Tax Description",
-        "inventoryManagement": "Inventory tracking",
+        "inventoryManagement": "Inventory Tracking",
         "inventoryManagementLabel": "Register product in inventory system and track its status",
-        "inventoryPolicy": "Deny when out of stock",
+        "inventoryPolicy": "Allow Backorder",
         "inventoryPolicyLabel": "Do not sell the product variant when it is not in stock",
-        "lowInventoryWarningThreshold": "Warn @",
+        "lowInventoryWarningThreshold": "Warn At",
         "lowInventoryWarningThresholdLabel": "Warn customers that the product will be close to sold out when the quantity reaches the next threshold",
         "originCountry": "Origin Country",
         "selectTaxCode": "Select Tax Code"
@@ -349,6 +346,7 @@
         "cancelOrderThenRestock": "Yes, and restock",
         "cancelOrderNoRestock": "Yes, but no restocking",
         "applyRefund": "Apply Refund",
+        "refunding": "Refunding",
         "applyDiscount": "Apply Discount",
         "adjustedTotal": "Adjusted Total",
         "invalidDiscount": "Discount cannot be greater than original total price",

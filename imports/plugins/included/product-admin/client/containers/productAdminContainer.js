@@ -108,13 +108,11 @@ class ProductAdminContainer extends Component {
 
 function composer(props, onData) {
   const product = ReactionProduct.selectedProduct();
-
   let tags;
   let media;
   let revisonDocumentIds;
 
-  // Check first that user has permission to edit the product
-  if (product && Reaction.hasPermission("createProduct", this.userId, product.shopId)) {
+  if (product) {
     if (_.isArray(product.hashtags)) {
       tags = _.map(product.hashtags, function (id) {
         return Tags.findOne(id);

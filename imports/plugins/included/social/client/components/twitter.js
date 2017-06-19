@@ -12,11 +12,12 @@ export function getTwitterMeta(props) {
   const description = props.settings.description;
 
   const meta = [
-    { property: "twitter:card", content: "summary" },
-    { property: "twitter:creator", content: username },
-    { property: "twitter:url", content: url },
-    { property: "twitter:title", content: title },
-    { property: "twitter:description", content: description }
+    { name: "twitter:card", content: "summary" },
+    { name: "twitter:creator", content: username },
+    { name: "twitter:site", content: username },
+    { name: "twitter:url", content: url },
+    { name: "twitter:title", content: title },
+    { name: "twitter:description", content: description }
   ];
 
   if (props.media) {
@@ -31,6 +32,7 @@ export function getTwitterMeta(props) {
       content: media
     });
   }
+  return meta;
 }
 
 class TwitterSocialButton extends Component {
@@ -77,7 +79,9 @@ class TwitterSocialButton extends Component {
     });
 
     return (
-      <a className="btn btn-flat twitter-share" href="#" onClick={this.handleClick} target="_blank">
+      <a className="btn btn-flat twitter-share" aria-label="Share to Twitter" href="#" onClick={this.handleClick}
+        target="_blank"
+      >
         <Helmet
           meta={getTwitterMeta(this.props)}
         />
