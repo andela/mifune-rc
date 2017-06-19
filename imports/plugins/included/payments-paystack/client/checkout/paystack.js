@@ -44,6 +44,7 @@ const findCurrency = (defaultCurrency, useDefaultShopCurrency) => {
 
 const enableButton = (template, buttonText) => {
   template.$(":input").removeAttr("disabled");
+
   template.$("#btn-complete-order").text(buttonText);
   return template.$("#btn-processing").addClass("hidden");
 };
