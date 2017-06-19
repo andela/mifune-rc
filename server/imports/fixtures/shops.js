@@ -115,12 +115,6 @@ export function createShopFactory() {
       enabled: true
     }],
     public: true,
-    brandAssets: [
-      {
-        mediaId: "J8Bhq3uTtdgwZx3rz",
-        type: "navbarBrandImage"
-      }
-    ],
     timezone: "US/Pacific",
     metafields: [],
     defaultRoles: ["guest", "account/profile"],

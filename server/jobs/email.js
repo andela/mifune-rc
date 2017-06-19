@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { Job } from "meteor/vsivsi:job-collection";
 import { Emails, Jobs } from "/lib/collections";
 import { Reaction, Logger } from "/server/api";
 
@@ -9,7 +10,7 @@ export default function () {
    * Example usage:
    * new Job(Jobs, "sendEmail", { from, to, subject, html }).save();
    */
-  const sendEmail = Jobs.processJobs("sendEmail", {
+  const sendEmail = Job.processJobs(Jobs, "sendEmail", {
     pollInterval: 5 * 60 * 1000, // poll every 5 mins as a backup - see the realtime observer below
     workTimeout: 2 * 60 * 1000, // fail if it takes longer than 2mins
     payload: 20
