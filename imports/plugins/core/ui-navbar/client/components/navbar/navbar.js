@@ -1,4 +1,4 @@
-import { FlatButton } from "/imports/plugins/core/ui/client/components";
+import { FlatButton, VerticalDivider } from "/imports/plugins/core/ui/client/components";
 import { NotificationContainer } from "/imports/plugins/included/notifications/client/containers";
 import { Reaction, Router } from "/client/api";
 import { Tags, Accounts } from "/lib/collections";
