@@ -91,7 +91,9 @@ Template.CoreNavigationBar.helpers({
     return {
       component: FlatButton,
       icon: "fa fa-blind",
+      label: "Get Started!",
       kind: "flat",
+      status: "info",
       onClick() {
         playTour();
       }
