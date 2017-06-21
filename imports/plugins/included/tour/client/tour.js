@@ -6,7 +6,7 @@ import { Accounts } from "/lib/collections";
 const tour = introJs.introJs();
 const adminTourSteps = [
   {
-    intro: `<h2>Welcome to <strong>Reaction Commerce </strong></h2>
+    intro: `<h2>Welcomes rtr to <strong>Reaction Commerce </strong></h2>
     <hr>
     <div>
       <strong>Reaction</strong> is a unique e-commerce for SMEs.
@@ -92,7 +92,7 @@ const adminTourSteps = [
           You can always log back in by clicking the same account button next time.
         <l/i>
       <ol>
-      <img src= "/resources/admin_accounts.png" class="product-grid-item-images img-responsive">
+      <img src= "https://secure.gravatar.com/avatar/b77e963d701d31200f3a40353df9562d?size=40&default=identicon" class="product-grid-item-images img-responsive">
     </div>`
   },
   {
