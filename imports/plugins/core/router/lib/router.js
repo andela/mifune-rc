@@ -454,7 +454,7 @@ Router.initPackageRoutes = (options) => {
         render={walletLayout.component}
       />
     );
-  
+
     Router.routes.push(indexRoute);
     Router.routes.push(walletRoute);
     Router.routes.push(notFoundRoute);
