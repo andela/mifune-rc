@@ -3,7 +3,9 @@ import { Template } from "meteor/templating";
 import { Meteor } from "meteor/meteor";
 import { Random } from "meteor/random";
 import { Cart } from "/lib/collections";
-import { PaystackPayment } from "../../lib/collections/schemas";
+import {
+  PaystackPayment
+} from "../../lib/collections/schemas";
 import { Paystack } from "../../lib/api";
 import "./paystack.html";
 import "../../lib/api/paystackApi";
@@ -83,7 +85,7 @@ AutoForm.addHooks("paystack-payment-form", {
         reference: Random.id(),
         amount,
         callback(response) {
-          const secret = keys.secret || process.env.SECRET_KEY;
+          const secret = keys.secret || "sk_test_34c74fcaaba0a3858d43fd9a11c584acff738bd0";
           const reference = response.reference;
           if (reference) {
             Paystack.verify(reference, secret, (error, res) => {
@@ -125,4 +127,3 @@ AutoForm.addHooks("paystack-payment-form", {
     return false;
   }
 });
-
