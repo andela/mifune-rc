@@ -6,7 +6,7 @@ import { Accounts } from "/lib/collections";
 const tour = introJs.introJs();
 const adminTourSteps = [
   {
-    intro: `<h2>Welcomes rtr to <strong>Reaction Commerce </strong></h2>
+    intro: `<h2>Welcome to <strong>Reaction Commerce </strong></h2>
     <hr>
     <div>
       <strong>Reaction</strong> is a unique e-commerce for SMEs.
