@@ -435,28 +435,28 @@ Router.initPackageRoutes = (options) => {
     );
 
 
-    // const walletLayout = ReactionLayout({ template: "wallet" });
-    // const walletRoute = {
-    //   route: "/wallet",
-    //   name: "wallet",
-    //   options: {
-    //     name: "wallet",
-    //     ...walletLayout.indexRoute,
-    //     component: walletLayout.component,
-    //     structure: walletLayout.structure
-    //   }
-    // };
+    const walletLayout = ReactionLayout({ template: "wallet" });
+    const walletRoute = {
+      route: "/wallet",
+      name: "wallet",
+      options: {
+        name: "wallet",
+        ...walletLayout.indexRoute,
+        component: walletLayout.component,
+        structure: walletLayout.structure
+      }
+    };
 
-    // reactRouterRoutes.push(
-    //   <Route
-    //     key="wallet"
-    //     path="/wallet"
-    //     render={walletLayout.component}
-    //   />
-    // );
-
+    reactRouterRoutes.push(
+      <Route
+        key="wallet"
+        path="/wallet"
+        render={walletLayout.component}
+      />
+    );
+  
     Router.routes.push(indexRoute);
-    // Router.routes.push(walletRoute);
+    Router.routes.push(walletRoute);
     Router.routes.push(notFoundRoute);
 
     // get package registry route configurations
