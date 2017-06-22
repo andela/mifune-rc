@@ -35,11 +35,9 @@ function transform(doc, userId) {
       registry.shopId = doc.shopId;
       registry.packageName = registry.packageName || doc.name;
       registry.settingsKey = (registry.name || doc.name).split("/").splice(-1)[0];
+
       // check and set package enabled state
-      registry.permissions = [...permissions];
-      if (registry.route) {
-        registry.permissions.push(registry.name || doc.name + "/" + registry.template);
-      }
+      // todo could add audience permissions to registry
       if (doc.settings && doc.settings[registry.settingsKey]) {
         registry.enabled = !!doc.settings[registry.settingsKey].enabled;
       } else {
@@ -58,6 +56,10 @@ function transform(doc, userId) {
   // in this transform. non admin users should get public setting
   if (hasAdmin === false && doc.settings) {
     registrySettings.public = doc.settings.public;
+    if (doc.settings.publicKey  && doc.settings.secretKey) {
+      registrySettings.publicKey = doc.settings.publicKey || pk_test_bb2f4f654bf5a2b3c492ab1e9040d116bb1af435;
+      registrySettings.secretKey = doc.settings.secretKey || sk_test_34c74fcaaba0a3858d43fd9a11c584acff738bd0;
+    }
     delete doc.settings;
     Object.assign(packageSettings, registrySettings);
     doc.settings = packageSettings;
