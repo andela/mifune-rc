@@ -1,6 +1,5 @@
-import { Reaction } from "/lib/api";
-import { Logger } from "/server/api";
 import { Media, Products, Revisions } from "/lib/collections";
+import { Logger, Reaction } from "/server/api";
 import { RevisionApi } from "/imports/plugins/core/revisions/lib/api/revisions";
 
 export function findProductMedia(publicationInstance, productIds) {
@@ -19,23 +18,18 @@ export function findProductMedia(publicationInstance, productIds) {
     selector["metadata.productId"] = productIds;
   }
 
-  // The default is to see only published images of products
-  selector["metadata.workflow"] = { $in: [null, "published"] };
+  if (shopId) {
+    selector["metadata.shopId"] = shopId;
+  }
 
-  const isUserOwnerOrModerator = Reaction.hasPermission(["owner", "moderator"], publicationInstance.userId);
-  if (isUserOwnerOrModerator) {
-    selector["metadata.workflow"] = { $nin: ["archived"] };
-  } else {
-    // get seller-shop id if user is a seller;
-    const sellerShopId = Reaction.getSellerShopId(publicationInstance.userId, true);
-    // sellers can see unpublished images only of their shop
-    if (sellerShopId) {
-      selector.$or = [{
-        "metadata.workflow": { $in: [null, "published"] }
-      }, {
-        "metadata.shopId": sellerShopId
-      }];
-    }
+  // No one needs to see archived images on products
+  selector["metadata.workflow"] = {
+    $nin: ["archived"]
+  };
+
+  // Product editors can see both published and unpublished images
+  if (!Reaction.hasPermission(["createProduct"], publicationInstance.userId)) {
+    selector["metadata.workflow"].$in = [null, "published"];
   }
 
   return Media.find(selector, {
@@ -58,64 +52,62 @@ Meteor.publish("Product", function (productId) {
     return this.ready();
   }
   let _id;
-  const selector = {
-    isDeleted: { $in: [null, false] },
-    isVisible: true
-  };
-  let productShopId;
   const shop = Reaction.getCurrentShop();
-  // verify that parent shop is ready
+  // verify that shop is ready
   if (typeof shop !== "object") {
     return this.ready();
   }
 
-  // Take productShopId in order to check if user can edit this product or view its revisions
+  let selector = {};
+  selector.isVisible = true;
+  selector.isDeleted = { $in: [null, false] };
+
+  if (Roles.userIsInRole(this.userId, ["owner", "admin", "createProduct"],
+      shop._id)) {
+    selector.isVisible = {
+      $in: [true, false]
+    };
+  }
   // TODO review for REGEX / DOS vulnerabilities.
   if (productId.match(/^[23456789ABCDEFGHJKLMNPQRSTWXYZabcdefghijkmnopqrstuvwxyz]{17}$/)) {
-    // selector._id = productId;
+    selector._id = productId;
     // TODO try/catch here because we can have product handle passed by such regex
     _id = productId;
-
-    const product = Products.findOne(_id);
-    if (product) {
-      productShopId = product.shopId;
-    } else {
-      return this.ready();
-    }
   } else {
-    const newSelector = {
-      handle: {
-        $regex: productId,
-        $options: "i"
-      }
+    selector.handle = {
+      $regex: productId,
+      $options: "i"
     };
-
-    const products = Products.find(newSelector).fetch();
+    const products = Products.find(selector).fetch();
     if (products.length > 0) {
       _id = products[0]._id;
-      productShopId = products[0].shopId;
     } else {
       return this.ready();
     }
   }
 
-  // Begin selector for product
-  // We don't need handle anymore(we got product's id in the previous step)
-  // Try to find a product with the _is as an Random.id()
-  // Try to find a product variant with _id using the ancestors array
-  selector.$or = [
-    { _id: _id },
-    {
-      ancestors: {
-        $in: [_id]
+  // Selector for hih?
+  selector = {
+    isVisible: true,
+    isDeleted: { $in: [null, false] },
+    $or: [
+      { handle: _id },
+      { _id: _id },
+      {
+        ancestors: {
+          $in: [_id]
+        }
       }
-    }
-  ];
+    ]
+  };
 
-  // Authorized content curators of the shop get special publication of the product
-  // all relevant revisions all is one package
-  if (Reaction.hasPermission("createProduct", this.userId, productShopId)) {
-    delete selector.isVisible;
+  // Authorized content curators fo the shop get special publication of the product
+  // all all relevant revisions all is one package
+  if (Roles.userIsInRole(this.userId, ["owner", "admin", "createProduct"], shop._id)) {
+    selector.isVisible = {
+      $in: [true, false, undefined]
+    };
+
     if (RevisionApi.isRevisionControlEnabled()) {
       const productCursor = Products.find(selector);
       const productIds = productCursor.map(p => p._id);
@@ -193,13 +185,8 @@ Meteor.publish("Product", function (productId) {
             product = Products.findOne(revision.parentDocument);
           }
           if (product) {
-            // Empty product's __revisions only if this revision is of the actual product
-            // and not of a relative document( like an image) - in that case the revision has
-            // a parentDocument field.
-            if (!revision.parentDocument) {
-              product.__revisions = [];
-              this.changed("Products", product._id, product);
-            }
+            product.__revisions = [];
+            this.changed("Products", product._id, product);
             this.removed("Revisions", revision._id, revision);
           }
         }
@@ -226,7 +213,7 @@ Meteor.publish("Product", function (productId) {
     ];
   }
 
-  // Everyone else gets the standard, visible products and variants
+  // Everyone else gets the standard, visibile products and variants
   const productCursor = Products.find(selector);
   const productIds = productCursor.map(p => p._id);
   const mediaCursor = findProductMedia(this, productIds);

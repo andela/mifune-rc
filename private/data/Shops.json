@@ -365,6 +365,11 @@
       "symbol": "¥",
       "scale": 0
     },
+    "KWD": {
+      "enabled": false,
+      "format": "%s%v",
+      "symbol": "ك"
+    },
     "KRW": {
       "enabled": false,
       "format": "%s%v",
@@ -423,6 +428,11 @@
       "symbol": "zł",
       "decimal": ","
     },
+    "QAR": {
+      "enabled": false,
+      "format": "%s%v",
+      "symbol": "﷼"
+    },
     "RUB": {
       "enabled": true,
       "format": "%v %s",
@@ -431,6 +441,11 @@
       "thousand": " ",
       "scale": 0,
       "where": "right"
+    },
+    "SAR": {
+      "enabled": false,
+      "format": "%s%v",
+      "symbol": "﷼"
     },
     "SEK": {
       "enabled": false,
@@ -502,7 +517,7 @@
     "i18n": "en",
     "enabled": true
   }, {
-    "label": "Ελληνικά",
+    "label": "Διάλεξε γλώσσα",
     "i18n": "el",
     "enabled": true
   }, {
@@ -3550,6 +3565,11 @@
       "symbol": "¥",
       "scale": 0
     },
+    "KWD": {
+      "enabled": false,
+      "format": "%s%v",
+      "symbol": "ك"
+    },
     "KRW": {
       "enabled": false,
       "format": "%s%v",
@@ -3604,6 +3624,11 @@
       "symbol": "zł",
       "decimal": ","
     },
+    "QAR": {
+      "enabled": false,
+      "format": "%s%v",
+      "symbol": "﷼"
+    },
     "RUB": {
       "enabled": false,
       "format": "%v %s",
@@ -3612,6 +3637,11 @@
       "thousand": " ",
       "scale": 0,
       "where": "right"
+    },
+    "SAR": {
+      "enabled": false,
+      "format": "%s%v",
+      "symbol": "﷼"
     },
     "SEK": {
       "enabled": false,

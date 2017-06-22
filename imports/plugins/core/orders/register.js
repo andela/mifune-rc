@@ -28,8 +28,7 @@ Reaction.registerPackage({
     icon: "fa fa-sun-o",
     priority: 1,
     container: "dashboard",
-    template: "orders",
-    audience: ["seller"]
+    template: "orders"
   }, {
     route: "/dashboard/pdf/orders/:id",
     workflow: "coreOrderPrintWorkflow",

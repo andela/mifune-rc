@@ -1,5 +1,4 @@
-import _ from  "lodash";
-import { Reaction } from "/lib/api";
+import { Reaction } from "/client/api";
 import { ReactionProduct } from "/lib/api";
 import { applyProductRevision } from "/lib/api/products";
 import { Products, Tags } from "/lib/collections";
@@ -52,34 +51,21 @@ Template.products.onCreated(function () {
   // We're not ready to serve prerendered page until products have loaded
   window.prerenderReady = false;
 
+
   // Update product subscription
   this.autorun(() => {
     const slug = Reaction.Router.getParam("slug");
     const tag = Tags.findOne({ slug: slug }) || Tags.findOne(slug);
     const scrollLimit = Session.get("productScrollLimit");
-    const options = {}; // this could be shop default implementation needed
+    let tags = {}; // this could be shop default implementation needed
 
     if (tag) {
-      _.extend(options, { tags: [tag._id] });
+      tags = { tags: [tag._id] };
     }
 
     // if we get an invalid slug, don't return all products
     if (!tag && slug) {
       return;
-    }
-
-    const hasMarketPlaceAccess = Reaction.hasMarketplaceAccess(["anonymous", "guest"]);
-
-    // allow published content from all sellers for everyone
-    if (hasMarketPlaceAccess) {
-      // show all shops
-      _.extend(options, { marketplace: true });
-
-      // check for single shop page and pass it as shops to productFilters
-      const shopId = Reaction.Router.current().params.shopId;
-      if (shopId) {
-        options.shops = [shopId];
-      }
     }
 
     if (this.state.equals("slug", slug) === false && this.state.equals("initialLoad", false)) {
@@ -88,11 +74,11 @@ Template.products.onCreated(function () {
 
     this.state.set("slug", slug);
 
-    const queryParams = Object.assign({}, options, Reaction.Router.current().queryParams);
+    const queryParams = Object.assign({}, tags, Reaction.Router.current().queryParams);
     const productsSubscription = this.subscribe("Products", scrollLimit, queryParams);
 
-    // Once our products subscription is ready, we are ready to render.
-    if (productsSubscription.ready() && (!hasMarketPlaceAccess)) {
+    // Once our products subscription is ready, we are ready to render
+    if (productsSubscription.ready()) {
       window.prerenderReady = true;
     }
 

@@ -23,13 +23,7 @@ Template.select.events({
  */
 Template.select.helpers({
   template() {
-    const currentData = Template.currentData();
-
-    if (!currentData) {
-      return;
-    }
-
-    const type = currentData.type;
+    const type = Template.currentData().type;
     if (type === "radios" || type === "radio") {
       return "selectAsRadioButtons";
     } else if (type === "checkboxes" || type === "checkbox") {

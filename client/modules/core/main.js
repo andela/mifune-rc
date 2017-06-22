@@ -87,14 +87,7 @@ export default {
    * @return {Boolean} Boolean - true if has permission
    */
   hasPermission(checkPermissions, checkUserId, checkGroup) {
-    let group;
-    // default group to the shop or global if shop isn't defined for some reason.
-    if (checkGroup !== undefined && typeof checkGroup === "string") {
-      group = checkGroup;
-    } else {
-      group = this.getSellerShopId() || Roles.GLOBAL_GROUP;
-    }
-
+    let group = this.getShopId();
     let permissions = ["owner"];
     let id = "";
     const userId = checkUserId || this.userId || Meteor.userId();
@@ -123,11 +116,7 @@ export default {
       if (Roles.userIsInRole(userId, permissions, group)) {
         return true;
       }
-
       // global roles check
-      // TODO: Review this commented out code
-      /*
-
       const sellerShopPermissions = Roles.getGroupsForUser(userId, "admin");
       // we're looking for seller permissions.
       if (sellerShopPermissions) {
@@ -140,7 +129,7 @@ export default {
             }
           }
         }
-      }*/
+      }
       // no specific permissions found returning false
       return false;
     }
@@ -178,6 +167,15 @@ export default {
       } else {
         return roleCheck();
       }
+
+      // default group to the shop or global if shop
+      // isn't defined for some reason.
+      if (checkGroup !== undefined && typeof checkGroup === "string") {
+        group = checkGroup;
+      }
+      if (!group) {
+        group = Roles.GLOBAL_GROUP;
+      }
     }
     // return false to be safe
     return false;
@@ -198,26 +196,16 @@ export default {
     return this.hasPermission(dashboardPermissions);
   },
 
-  getSellerShopId: function (userId = Meteor.userId(), noFallback = false) {
-    if (userId) {
-      const group = Roles.getGroupsForUser(userId, "admin")[0];
-      if (group) {
-        return group;
+  getUserPreferences(packageName, preference, defaultValue) {
+    const user = Meteor.user();
+
+    if (user) {
+      const profile = Meteor.user().profile;
+      if (profile && profile.preferences && profile.preferences[packageName] && profile.preferences[packageName][preference]) {
+        return profile.preferences[packageName][preference];
       }
     }
 
-    if (noFallback) {
-      return false;
-    }
-
-    return this.getShopId();
-  },
-
-  getUserPreferences(packageName, preference, defaultValue) {
-    const profile = Meteor.user().profile;
-    if (profile && profile.preferences && profile.preferences[packageName] && profile.preferences[packageName][preference]) {
-      return profile.preferences[packageName][preference];
-    }
     return defaultValue || undefined;
   },
 
@@ -279,14 +267,7 @@ export default {
   },
 
   getPackageSettings(name) {
-    const shopId = this.getShopId();
-    const query = { name };
-
-    if (shopId) {
-      query.shopId = shopId;
-    }
-
-    return Packages.findOne(query);
+    return Packages.findOne({ name, shopId: this.getShopId() });
   },
 
   allowGuestCheckout() {
@@ -297,6 +278,10 @@ export default {
       allowGuest = settings.public.allowGuestCheckout;
     }
     return allowGuest;
+  },
+
+  getSellerShopId() {
+    return Roles.getGroupsForUser(this.userId, "admin");
   },
 
   /**
@@ -317,6 +302,7 @@ export default {
   isActionViewDetailOpen() {
     return Session.equals("admin/showActionViewDetail", true);
   },
+
 
   setActionView(viewData) {
     if (viewData) {

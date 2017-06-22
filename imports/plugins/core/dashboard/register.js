@@ -29,11 +29,7 @@ Reaction.registerPackage({
     label: "Dashboard",
     template: "dashboardPackages",
     icon: "icon-reaction-logo",
-    priority: 0,
-    permissions: [{
-      label: "Dashboard",
-      permission: "dashboard"
-    }]
+    priority: 0
   }, {
     route: "/dashboard/shop/settings",
     template: "shopSettings",

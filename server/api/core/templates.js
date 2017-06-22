@@ -74,7 +74,7 @@ export function getTemplateByName(templateName, shopId) {
   const templateInfo = Templates.findOne({
     name: templateName,
     $or: [
-      // Attemt to find user editable / edited template first
+      // Attemt to find user editable / edited templated first
       {
         isOriginalTemplate: false
       },

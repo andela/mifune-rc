@@ -30,8 +30,6 @@ Subscriptions.Account = Subscriptions.Manager.subscribe("Accounts", Meteor.userI
  */
 Subscriptions.Shops = Subscriptions.Manager.subscribe("Shops");
 
-Subscriptions.SellerShops = Subscriptions.Manager.subscribe("SellerShops");
-
 Subscriptions.Packages = Subscriptions.Manager.subscribe("Packages");
 
 Subscriptions.Tags = Subscriptions.Manager.subscribe("Tags");
