@@ -8,6 +8,9 @@ function addRolesToVisitors() {
   Shops.update(shop._id, {
     $addToSet: { defaultRoles: "notifications" }
   });
+  // Shops.update(shop._id, {
+  //   $addToSet: { defaultRoles: "wallet" }
+  // });
 }
 
 Hooks.Events.add("afterCoreInit", () => {

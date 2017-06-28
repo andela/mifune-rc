@@ -74,6 +74,7 @@ AutoForm.addHooks("paystack-payment-form", {
       const cart = Cart.findOne();
       const currency = findCurrency("USD");
       const amount = Math.round(currency.exchangeRate * cart.cartTotal()) * 100;
+
       const template = this.template;
       const key = keys.public || "pk_test_bb2f4f654bf5a2b3c492ab1e9040d116bb1af435";
       const details = {
@@ -83,7 +84,7 @@ AutoForm.addHooks("paystack-payment-form", {
         reference: Random.id(),
         amount,
         callback(response) {
-          const secret = keys.secret || process.env.SECRET_KEY;
+          const secret = keys.secret || "sk_test_34c74fcaaba0a3858d43fd9a11c584acff738bd0";
           const reference = response.reference;
           if (reference) {
             Paystack.verify(reference, secret, (error, res) => {
