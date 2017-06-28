@@ -1,8 +1,8 @@
-import { Reaction } from "/lib/api";
-import { Tags } from "/lib/collections";
-import { FlatButton } from "/imports/plugins/core/ui/client/components";
+import { FlatButton, VerticalDivider } from "/imports/plugins/core/ui/client/components";
 import { NotificationContainer } from "/imports/plugins/included/notifications/client/containers";
-import { VerticalDivider } from "/imports/plugins/core/ui/client/components";
+import { Reaction, Router } from "/client/api";
+import { Tags, Accounts } from "/lib/collections";
+import { playTour } from "/imports/plugins/included/tour/client/tour";
 import CartPanel from "../../../../checkout/client/templates/cartPanel/container/cartPanelContainer";
 
 
@@ -15,6 +15,17 @@ Template.CoreNavigationBar.onCreated(function () {
   } else {
     this.state.set("searchEnabled", false);
   }
+});
+
+Template.CoreNavigationBar.onRendered(function () {
+  currentRoute = Router.getRouteName();
+  this.autorun(() => {
+    if (Accounts.findOne(Meteor.userId())) {
+      if (!Accounts.findOne(Meteor.userId()).takenTour && Accounts.findOne(Meteor.userId()).emails[0]) {
+        playTour();
+      }
+    }
+  });
 });
 
 /**
@@ -75,6 +86,25 @@ Template.CoreNavigationBar.helpers({
   notificationButtonComponent() {
     return {
       component: NotificationContainer
+    };
+  },
+  staticPagesMenu() {
+    return {
+      component: FlatButton,
+      kind: "flat",
+      label: "More Pages"
+    };
+  },
+  TourButtonComponent() {
+    return {
+      component: FlatButton,
+      icon: "fa fa-blind",
+      label: "Get Started!",
+      kind: "flat",
+      status: "info",
+      onClick() {
+        playTour();
+      }
     };
   },
   onMenuButtonClick() {

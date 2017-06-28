@@ -19,9 +19,10 @@
     {{#if hasPermission 'account/profile'}}
       <div>{{> React notificationButtonComponent }}</div>
     {{/if}}
+    <div class="tour">{{> React TourButtonComponent}}</div>
     <div class="languages hidden-xs">{{> i18nChooser}}</div>
     <div class="currencies hidden-xs">{{> currencySelect}}</div>
-    <div class="accounts">{{> accounts tpl="loginDropdown"}}</div>
+    <div id="accounts" class="accounts">{{> accounts tpl="loginDropdown"}}</div>
     <div class="cart">{{> cartIcon}}</div>
     <div class="cart-alert">{{> React component=cartPanel}}</div>
   </div>
