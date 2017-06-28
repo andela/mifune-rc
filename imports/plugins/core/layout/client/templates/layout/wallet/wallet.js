@@ -30,7 +30,7 @@ const getPaystackSettings = () => {
 };
 
 const finalizeDeposit = (paystackMethod) => {
-  Meteor.call("wallettransaction", Meteor.userId(), paystackMethod.transactions, (err, res) => {
+  Meteor.call("wallet/transaction", Meteor.userId(), paystackMethod.transactions, (err, res) => {
     if (res) {
       document.getElementById("depositAmount").value = "";
       Alerts.toast("You transaction was Successful","success");
@@ -102,7 +102,7 @@ Template.wallet.events({
     event.preventDefault();
     const accountDetails = Accounts.find(Meteor.userId()).fetch();
     const userMail = accountDetails[0].emails[0].address;
-    const amount = parseInt(document.getElementById("depositAmount").value, 10);
+    const amount = Number(document.getElementById("depositAmount").value, 10);
     const mailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,63}$/i;
     if (!mailRegex.test(userMail)) {
       Alerts.toast("Invalid email address", "error");
@@ -114,7 +114,7 @@ Template.wallet.events({
   "submit #transfer": (event) => {
     event.preventDefault();
     const exchangeRate = getExchangeRate();
-    const amount = parseInt(document.getElementById("transferAmount").value, 10) / exchangeRate;
+    const amount = Number(document.getElementById("transferAmount").value, 10) / exchangeRate;
     if (amount > Template.instance().state.get("details").balance) {
       Alerts.toast("Insufficient Balance", "error");
       return false;
@@ -125,7 +125,7 @@ Template.wallet.events({
     }
     const recipient = document.getElementById("recipient").value;
     const transaction = { amount, to: recipient, date: new Date(), transactionType: "Debit" };
-    Meteor.call("wallettransaction", Meteor.userId(), transaction, (err, res) => {
+    Meteor.call("wallet/transaction", Meteor.userId(), transaction, (err, res) => {
       if (res === 2) {
         Alerts.toast(`No user with email ${recipient}`, "error");
       } else if (res === 1) {

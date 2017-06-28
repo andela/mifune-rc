@@ -77,7 +77,7 @@ Template.walletPayment.events({
     }
     const currency = Shops.findOne().currency;
     transactionId = Random.id();
-    Meteor.call("wallettransaction", Meteor.userId(), {
+    Meteor.call("wallet/transaction", Meteor.userId(), {
       amount: cartAmount,
       date: new Date(),
       orderId: transactionId,
