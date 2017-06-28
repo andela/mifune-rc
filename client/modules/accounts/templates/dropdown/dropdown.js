@@ -61,6 +61,9 @@ Template.loginDropdown.events({
           });
         }
       });
+    } else if (this.name === "wallet") {
+      const route = this.route;
+      Reaction.Router.go(route);
     } else if (this.name !== "account/profile") {
       event.preventDefault();
       /** TMP **/

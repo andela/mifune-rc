@@ -40,9 +40,18 @@ Reaction.registerPackage({
     template: "accountProfile",
     name: "account/profile",
     label: "Profile",
-    icon: "fa fa-user",
+    icon: "fa fa-users",
     provides: "userAccountDropdown"
-  }],
+  }, {
+    route: "/wallet",
+    template: "wallet",
+    name: "wallet",
+    label: "wallet",
+    icon: "fa fa-google-wallet",
+    provides: "userAccountDropdown"
+  }
+  ],
+
   layout: [{
     layout: "coreLayout",
     workflow: "coreAccountsWorkflow",
