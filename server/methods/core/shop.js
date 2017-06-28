@@ -30,9 +30,6 @@ Meteor.methods({
     const count = Collections.Shops.find().count() || "";
     const currentUser = Meteor.user();
 
-    if (!currentUser) {
-      throw new Meteor.Error("Unable to create shop with specified user");
-    }
 
     // we'll accept a shop object, or clone the current shop
     const shop = shopData || Collections.Shops.findOne(Reaction.getShopId());
