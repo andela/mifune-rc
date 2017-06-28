@@ -11,7 +11,7 @@ Meteor.methods({
   * @param {object} transactions details of the transaction
   * @return {boolean} true or false if the db operation was successful
   */
-  "wallettransaction": (userId, transactions) => {
+  "wallet/transaction": (userId, transactions) => {
     check(userId, String);
     check(transactions, Schemas.Transaction);
     let balanceOptions;
@@ -27,7 +27,7 @@ Meteor.methods({
           return 2;
         }
         // deposit for the recipient
-        Meteor.call("wallettransaction", recipient._id, {
+        Meteor.call("wallet/transaction", recipient._id, {
           amount,
           from: sender.emails[0].address,
           date: new Date(),
