@@ -19,8 +19,19 @@ class ProductDetailContainer extends Component {
     this.textTimeOut = null;
     this.state = {
       cartQuantity: 1,
-      click: 0
+      click: 0,
+      isDigital: props.product.isDigital || false,
+      digitalDownloadLink: props.product.digitalDownloadLink || ""
     };
+    this.isDigitalListener = this.isDigitalListener.bind(this);
+  }
+
+  get isDigital() {
+    return this.state.isDigital;
+  }
+
+  get digitalDownloadLink() {
+    return this.state.digitalDownloadLink;
   }
 
   handleCartQuantityChange = (event, quantity) => {
@@ -116,17 +127,25 @@ class ProductDetailContainer extends Component {
         productId = currentProduct._id;
 
         if (productId) {
-          Meteor.call("cart/addToCart", productId, currentVariant._id, quantity, (error) => {
-            if (error) {
-              Logger.error(error, "Failed to add to cart.");
-              return error;
-            }
-            // Reset cart quantity on success
-            this.handleCartQuantityChange(null, 1);
-            this.state.click++;
+          Meteor
+            .call(
+              "cart/addToCart",
+              productId,
+              currentVariant._id,
+              quantity,
+              this.isDigital,
+              this.digitalDownloadLink,
+              (error) => {
+                if (error) {
+                  Logger.error(error, "Failed to add to cart.");
+                  return error;
+                }
+                // Reset cart quantity on success
+                this.handleCartQuantityChange(null, 1);
+                this.state.click++;
 
-            return true;
-          });
+                return true;
+            });
         }
 
         // template.$(".variant-select-option").removeClass("active");
@@ -225,12 +244,16 @@ class ProductDetailContainer extends Component {
     ReactionProduct.archiveProduct(this.props.product);
   }
 
+  isDigitalListener(isDigital) {
+    this.setState({ isDigital: isDigital });
+  }
   render() {
     if (isEmpty(this.props.product)) {
       return (
         <ProductNotFound />
       );
     }
+
     return (
       <TranslationProvider>
         <DragDropProvider>
@@ -242,7 +265,8 @@ class ProductDetailContainer extends Component {
               onCartQuantityChange={this.handleCartQuantityChange}
               onViewContextChange={this.handleViewContextChange}
               socialComponent={<SocialContainer />}
-              topVariantComponent={<VariantListContainer />}
+              isDigital={this.isDigital}
+              topVariantComponent={<VariantListContainer product={this.props.product} isDigital={this.isDigital} />}
               onDeleteProduct={this.handleDeleteProduct}
               onProductFieldChange={this.handleProductFieldChange}
               {...this.props}

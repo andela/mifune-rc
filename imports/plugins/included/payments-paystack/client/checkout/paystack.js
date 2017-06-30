@@ -3,7 +3,9 @@ import { Template } from "meteor/templating";
 import { Meteor } from "meteor/meteor";
 import { Random } from "meteor/random";
 import { Cart } from "/lib/collections";
-import { PaystackPayment } from "../../lib/collections/schemas";
+import {
+  PaystackPayment
+} from "../../lib/collections/schemas";
 import { Paystack } from "../../lib/api";
 import "./paystack.html";
 import "../../lib/api/paystackApi";
@@ -126,4 +128,3 @@ AutoForm.addHooks("paystack-payment-form", {
     return false;
   }
 });
-
