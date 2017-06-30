@@ -456,12 +456,13 @@ export const methods = {
     }
 
     const billing = orderCreditMethod(order);
-    const refundResult = Meteor.call("orders/refunds/list", order);
     let refundTotal = 0;
-
-    _.each(refundResult, function (item) {
-      refundTotal += parseFloat(item.amount);
-    });
+    const refundsResult = Meteor.call("orders/refunds/list", order);
+    if (refundsResult.length > 0) {
+      _.each(refundsResult, function (item) {
+        refundTotal += parseFloat(item.amount);
+      });
+    }
 
     // Get user currency formatting from shops collection, remove saved rate
     const userCurrencyFormatting = _.omit(shop.currencies[billing.currency.userCurrency], ["enabled", "rate"]);
@@ -596,6 +597,28 @@ export const methods = {
           }
         }
       };
+
+      const digitalItems = [];
+      order.items.forEach((item) => {
+        const parentProduct = Products.findOne({
+          _id: item.variants.ancestors[0]
+        });
+
+        if (parentProduct.isDigital) {
+          digitalItems.push({
+            productId: parentProduct._id,
+            productTitle: parentProduct.title,
+            productIsDigital: parentProduct.isDigital,
+            productDescription: parentProduct.description,
+            productVendor: parentProduct.vendor,
+            productDownloadLink: parentProduct.digitalDownloadLink
+          });
+        }
+      });
+
+      if (digitalItems.length > 0) {
+        dataForEmail.digitalItems = digitalItems;
+      }
 
       Logger.debug(`orders/sendNotification status: ${order.workflow.status}`);
 
