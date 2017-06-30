@@ -56,6 +56,14 @@ Template.CoreNavigationBar.events({
 });
 
 Template.CoreNavigationBar.helpers({
+  VerticalDivider() {
+    return VerticalDivider;
+  },
+
+  isMarketplaceOwner() {
+    return Reaction.hasMarketplaceAccess("owner");
+  },
+
   isSearchEnabled() {
     const instance = Template.instance();
     return instance.state.get("searchEnabled");

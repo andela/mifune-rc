@@ -65,7 +65,7 @@ Template.coreOrderShippingInvoice.helpers({
   isRefunding() {
     const instance = Template.instance();
     if (instance.state.get("isRefunding")) {
-      instance.$("#btn-refund-payment").text(i18next.t("order.refunding"));
+      instance.$("#btn-refund-payment").text("Refunding");
       return true;
     }
     return false;
@@ -288,14 +288,11 @@ Template.coreOrderShippingInvoice.events({
       }, (isConfirm) => {
         if (isConfirm) {
           state.set("isRefunding", true);
-          Meteor.call("orders/refunds/create", order._id, paymentMethod, refund, (error, result) => {
+          Meteor.call("orders/refunds/create", order._id, paymentMethod, refund, (error) => {
             if (error) {
               Alerts.alert(error.reason);
             }
-            if (result) {
-              Alerts.toast(i18next.t("mail.alerts.emailSent"), "success");
-            }
-            $("#btn-refund-payment").text(i18next.t("order.applyRefund"));
+            Alerts.toast(i18next.t("mail.alerts.emailSent"), "success");
             state.set("field-refund", 0);
             state.set("isRefunding", false);
           });
@@ -382,7 +379,7 @@ Template.coreOrderShippingInvoice.helpers({
     return {
       component: NumericInput,
       numericType: "currency",
-      value: state.get("field-refund") || 0,
+      value: 0,
       maxValue: adjustedTotal,
       format: state.get("currency"),
       classNames: {

@@ -25,6 +25,7 @@
 
 .rui.search-modal-close ::after {
   clear: both;
+  z-index: 1051; //calc(@zindex-modal + 1); // calc() doesn't work for z-index in FireFox
 }
 
 /* -------------------------- Modal Header -------------------------- */
