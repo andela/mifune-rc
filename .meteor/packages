@@ -102,3 +102,6 @@ twitter-config-ui@1.0.0
 nimble:restivus
 mizzao:autocomplete
 practicalmeteor:mocha
+chart:chart
+mrt:moment
+richsilv:pikaday
