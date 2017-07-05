@@ -63,7 +63,9 @@ jeremy:stripe
 jparker:gravatar
 juliancwirko:s-alert
 juliancwirko:s-alert-stackslide
+kadira:blaze-layout
 kadira:dochead
+kadira:flow-router-ssr
 matb33:collection-hooks
 meteorhacks:ssr
 meteorhacks:subs-manager
@@ -99,6 +101,7 @@ google-config-ui@1.0.0
 twitter-config-ui@1.0.0
 nimble:restivus
 mizzao:autocomplete
+practicalmeteor:mocha
 chart:chart
 mrt:moment
 richsilv:pikaday

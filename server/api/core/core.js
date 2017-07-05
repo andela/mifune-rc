@@ -15,15 +15,8 @@ import { getMailUrl } from "./email/config";
 export default {
 
   init() {
-    // make sure the default shop has been created before going further
-    while (!this.getShopId()) {
-      Logger.warn("No shopId, waiting one second...");
-      Meteor._sleepForMs(1000);
-    }
-
     // run onCoreInit hooks
-    Hooks.Events.run("onCoreInit");
-
+    Hooks.Events.run("onCoreInit", this);
     // start job server
     Jobs.startJobServer(() => {
       Logger.info("JobServer started");
@@ -59,7 +52,7 @@ export default {
 
   /**
    * registerTemplate
-   * registers Templates into the Tempaltes Collection
+   * registers Templates into the Templates Collection
    * @return {function} Registers template
    */
   registerTemplate: registerTemplate,
@@ -73,17 +66,13 @@ export default {
    * @param {String} checkGroup group - default to shopId
    * @return {Boolean} Boolean - true if has permission
    */
-  hasPermission(checkPermissions, userId = Meteor.userId(), checkGroup = this.getShopId()) {
+  hasPermission(checkPermissions, userId = Meteor.userId(), checkGroup = this.getSellerShopId(userId)) {
     // check(checkPermissions, Match.OneOf(String, Array)); check(userId, String); check(checkGroup,
     // Match.Optional(String));
 
     let permissions;
-    // default group to the shop or global if shop isn't defined for some reason.
-    if (checkGroup !== undefined && typeof checkGroup === "string") {
-      group = checkGroup;
-    } else {
-      group = this.getShopId() || Roles.GLOBAL_GROUP;
-    }
+    const group = checkGroup || Roles.GLOBAL_GROUP;
+
 
     // permissions can be either a string or an array we'll force it into an array and use that
     if (checkPermissions === undefined) {
@@ -104,6 +93,8 @@ export default {
     }
 
     // global roles check
+    // TODO: Review this commented out code
+    /*
     const sellerShopPermissions = Roles.getGroupsForUser(userId, "admin");
 
     // we're looking for seller permissions.
@@ -117,7 +108,8 @@ export default {
           }
         }
       }
-    }
+    }*/
+
     // no specific permissions found returning false
     return false;
   },
@@ -132,10 +124,6 @@ export default {
 
   hasDashboardAccess() {
     return this.hasPermission(["owner", "admin", "dashboard"]);
-  },
-
-  getSellerShopId() {
-    return Roles.getGroupsForUser(this.userId, "admin");
   },
 
   configureMailUrl() {
@@ -174,6 +162,7 @@ export default {
         _id: 1
       }
     }).fetch()[0];
+
     return shop && shop._id;
   },
 
@@ -235,7 +224,68 @@ export default {
   },
 
   getPackageSettings(name) {
-    return Packages.findOne({ packageName: name, shopId: this.getShopId() }) || null;
+    const shopId = this.getShopId();
+    const query = {
+      name
+    };
+
+    if (shopId) {
+      query.shopId = shopId;
+    }
+
+    return Packages.findOne(query);
+  },
+
+  /**
+   * Add default roles for new visitors
+   * @param {String|Array} roles - A string or array of roles and routes
+   * @returns {undefined} - does not specifically return anything
+   */
+  addDefaultRolesToVisitors(roles) {
+    Logger.info(`Adding defaultRoles & defaultVisitorRole permissions for ${roles}`);
+
+    const shop = Shops.findOne(this.getShopId());
+
+    if (Match.test(roles, [String])) {
+      Shops.update(shop._id, {
+        $addToSet: { defaultVisitorRole: { $each: roles } }
+      });
+      Shops.update(shop._id, {
+        $addToSet: { defaultRoles: { $each: roles } }
+      });
+    } else if (Match.test(roles, String)) {
+      Shops.update(shop._id, {
+        $addToSet: { defaultVisitorRole: roles }
+      });
+      Shops.update(shop._id, {
+        $addToSet: { defaultRoles: roles }
+      });
+    } else {
+      throw new Meteor.Error(`Failed to add default roles ${roles}`);
+    }
+  },
+
+  /**
+   * Add default roles for new sellers
+   * @param {String|Array} roles A string or array of roles and routes
+   * @returns {undefined} - does not specifically return anything
+   */
+  addDefaultRolesToSellers(roles) {
+    Logger.info(`Adding defaultSellerRoles permissions for ${roles}`);
+
+    const shop = Shops.findOne(this.getShopId());
+
+    if (Match.test(roles, [String])) {
+      Shops.update(shop._id, {
+        $addToSet: { defaultSellerRole: { $each: roles } }
+      });
+    } else if (Match.test(roles, String)) {
+      Shops.update(shop._id, {
+        $addToSet: { defaultSellerRole: roles }
+      });
+    } else {
+      throw new Meteor.Error(`Failed to add default seller roles ${roles}`);
+    }
   },
 
   getAppVersion() {
@@ -258,6 +308,10 @@ export default {
     let configureEnv = false;
     let accountId;
 
+    while (!this.getShopId()) {
+      Logger.debug("No shopId, waiting one second...");
+      Meteor._sleepForMs(1000);
+    }
     const shopId = this.getShopId();
 
     // if an admin user has already been created, we'll exit
@@ -388,11 +442,11 @@ export default {
       // or attempt to load reaction.json fixture data
       try {
         registryFixtureData = Assets.getText("settings/reaction.json");
-        Logger.info("Loaded \"/private/settings/reaction.json\" for registry fixture import");
       } catch (error) {
         Logger.warn("Skipped loading settings from reaction.json.");
         Logger.debug(error, "loadSettings reaction.json not loaded.");
       }
+      Logger.info("Loaded \"/private/settings/reaction.json\" for registry fixture import");
     }
 
     if (!!registryFixtureData) {
