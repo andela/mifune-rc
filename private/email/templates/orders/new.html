@@ -344,6 +344,38 @@
                                 </table>
                               </td>
                             </tr>
+                            {{#if digitalItems}}
+                            <tr style="margin-top: 10px">
+                              <td valign="top" align="left">
+                                <table width="100%" border="0" cellspacing="0" cellpadding="0" class="emailwrapto100pc">
+                                  <tbody>
+                                    <tr>
+                                      <td valign="middle" align="left">
+                                        <h2 style="font-size:30px; line-height:normal; color:#4c4c4d; font-family:Arial, helvetica; font-weight:bold;">Links to digital products</h2>
+                                        {{#each digitalItems}}
+                                        <table width="100%" border="0" cellspacing="0" cellpadding="0" class="emailwrapto100pc" style="margin-bottom: 10px;">
+                                          <tbody>
+                                            <tr>
+                                              <td align="left" valign="middle" style="font-size:20px; line-height:normal; color:#4c4c4d; font-family:Arial, helvetica;">{{productTitle}}</td>
+                                              <td align="right" valign="middle" style="font-size:20px; line-height:normal; color:#4c4c4d; font-family:Arial, helvetica;">
+                                                <a href="{{productDownloadLink}}">
+                                                  Download Link
+                                                </a>
+                                              </td>
+                                            </tr>
+                                          </tbody>
+                                        </table>
+                                        <tr>
+                                          <td height="1" align="left" valign="middle" bgcolor="#e2e2e2" style="font-size:1px; line-height:1px;">&nbsp;</td>
+                                        </tr>
+                                        {{/each}}
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </td>
+                            </tr>
+                            {{/if}}
                             <!-- End Body -->
 
                             <!-- Begin footer -->

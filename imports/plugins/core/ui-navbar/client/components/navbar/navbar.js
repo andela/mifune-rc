@@ -83,6 +83,13 @@ Template.CoreNavigationBar.helpers({
       kind: "flat"
     };
   },
+  pageButton() {
+    return {
+      component: FlatButton,
+      kind: "flat",
+      label: "How to Shop"
+    };
+  },
   notificationButtonComponent() {
     return {
       component: NotificationContainer

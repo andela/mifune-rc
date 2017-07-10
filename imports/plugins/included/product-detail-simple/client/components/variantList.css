@@ -1,0 +1,7 @@
+.invalidUrl {
+  outline-color: #e94334;
+}
+
+.validUrl {
+  outline-color: #94e8d1;
+}
