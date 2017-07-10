@@ -30,6 +30,9 @@ Meteor.methods({
     const count = Collections.Shops.find().count() || "";
     const currentUser = Meteor.user();
 
+    if (!currentUser) {
+      throw new Meteor.Error("Unable to create shop with specified user");
+    }
 
     // we'll accept a shop object, or clone the current shop
     const shop = shopData || Collections.Shops.findOne(Reaction.getShopId());
@@ -51,7 +54,20 @@ Meteor.methods({
 
     // admin or marketplace needs to be on and guests allowed to create shops
     if (currentUser && Reaction.hasMarketplaceAccess("guest")) {
-      adminRoles = shop.defaultSellerRoles;
+
+      adminRoles = ['admin',
+        'seller',
+        'guest',
+        'manage-users',
+        'orders',
+        'account/profile',
+        'product',
+        'createProduct',
+        'tag',
+        'index',
+        'cart/checkout',
+        'cart/completed'];
+
 
       // add user info for new shop
       shop.emails = currentUser.emails;
@@ -224,10 +240,10 @@ Meteor.methods({
       shopId: shopId,
       name: "core"
     }, {
-      fields: {
-        settings: 1
-      }
-    });
+        fields: {
+          settings: 1
+        }
+      });
 
     // update Shops.currencies[currencyKey].rate
     // with current rates from Open Exchange Rates
@@ -575,10 +591,10 @@ Meteor.methods({
     return Collections.Tags.update({
       _id: tagId
     }, {
-      $set: {
-        isTopLevel: false
-      }
-    });
+        $set: {
+          isTopLevel: false
+        }
+      });
   },
 
   /**
@@ -597,10 +613,10 @@ Meteor.methods({
         }
       }
     }, {
-      fields: {
-        defaultWorkflows: true
-      }
-    });
+        fields: {
+          defaultWorkflows: true
+        }
+      });
     return shopWorkflows;
   },
   /**
@@ -641,27 +657,27 @@ Meteor.methods({
       return Collections.Shops.update({
         _id: Reaction.getShopId()
       }, {
-        $set: updateObject
-      });
+          $set: updateObject
+        });
     } else if (language === defaultLanguage) {
       return Collections.Shops.update({
         "_id": Reaction.getShopId(),
         "languages.i18n": language
       }, {
-        $set: {
-          "languages.$.enabled": true
-        }
-      });
+          $set: {
+            "languages.$.enabled": true
+          }
+        });
     }
 
     return Collections.Shops.update({
       "_id": Reaction.getShopId(),
       "languages.i18n": language
     }, {
-      $set: {
-        "languages.$.enabled": enabled
-      }
-    });
+        $set: {
+          "languages.$.enabled": enabled
+        }
+      });
   },
 
   /**
@@ -701,25 +717,25 @@ Meteor.methods({
       return Collections.Shops.update({
         _id: Reaction.getShopId()
       }, {
-        $set: updateObject
-      });
+          $set: updateObject
+        });
     } else if (currency === defaultCurrency) {
       return Collections.Shops.update({
         _id: Reaction.getShopId()
       }, {
-        $set: {
-          [`currencies.${currency}.enabled`]: true
-        }
-      });
+          $set: {
+            [`currencies.${currency}.enabled`]: true
+          }
+        });
     }
 
     return Collections.Shops.update({
       _id: Reaction.getShopId()
     }, {
-      $set: {
-        [`currencies.${currency}.enabled`]: enabled
-      }
-    });
+        $set: {
+          [`currencies.${currency}.enabled`]: enabled
+        }
+      });
   },
 
   /**
@@ -750,26 +766,26 @@ Meteor.methods({
         "_id": Reaction.getShopId(),
         "brandAssets.type": "navbarBrandImage"
       }, {
-        $set: {
-          "brandAssets.$": {
-            mediaId: asset.mediaId,
-            type: asset.type
+          $set: {
+            "brandAssets.$": {
+              mediaId: asset.mediaId,
+              type: asset.type
+            }
           }
-        }
-      });
+        });
     }
 
     // Otherwise we insert a new brand asset reference
     return Collections.Shops.update({
       _id: Reaction.getShopId()
     }, {
-      $push: {
-        brandAssets: {
-          mediaId: asset.mediaId,
-          type: asset.type
+        $push: {
+          brandAssets: {
+            mediaId: asset.mediaId,
+            type: asset.type
+          }
         }
-      }
-    });
+      });
   },
 
   /*
