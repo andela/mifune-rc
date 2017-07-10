@@ -29,6 +29,7 @@ Meteor.methods({
     // this.unblock();
     const count = Collections.Shops.find().count() || "";
     const currentUser = Meteor.user();
+
     if (!currentUser) {
       throw new Meteor.Error("Unable to create shop with specified user");
     }
