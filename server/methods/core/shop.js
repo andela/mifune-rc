@@ -54,7 +54,9 @@ Meteor.methods({
 
     // admin or marketplace needs to be on and guests allowed to create shops
     if (currentUser && Reaction.hasMarketplaceAccess("guest")) {
+   
       adminRoles = shop.defaultSellerRoles;
+      console.log(shop.defaultSellerRoles, 'roles');
 
       // add user info for new shop
       shop.emails = currentUser.emails;
@@ -71,6 +73,7 @@ Meteor.methods({
     }
 
     try {
+      console.log('i am here');
       Collections.Shops.insert(shop);
     } catch (error) {
       throw new Meteor.Error("insert-failed", "Failed to create new shop");
